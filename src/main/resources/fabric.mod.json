@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "itatiers",
+  "version": "${version}",
+  "name": "ItaTiers",
+  "description": "Tiers per la Tierlist Italiana ufficiale",
+  "authors": [
+    "Flavio6561"
+  ],
+  "contact": {
+    "issues": "https://github.com/Flavio6561/ItaTiers/issues",
+    "homepage": "https://github.com/Flavio6561/ItaTiers"
+  },
+  "custom" : {
+    "modmenu" : {
+      "links" : {
+        "GitHub": "https://github.com/Flavio6561/ItaTiers",
+        "Modrinth page": "https://modrinth.com/mod/tiers",
+        "Changelogs" : "https://github.com/Flavio6561/ItaTiers/wiki/Version-changelogs",
+        "GitHub Issues": "https://github.com/Flavio6561/ItaTiers/issues"
+      }
+    }
+  },
+  "icon": "assets/itatiers/icon.png",
+  "entrypoints": {
+    "client": [
+      "com.itatiers.ItaTiersClient"
+    ],
+    "modmenu": [
+      "com.itatiers.misc.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    {
+      "config": "itatiers.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "minecraft": [
+      "1.21.6",
+      "1.21.7",
+      "1.21.8"
+    ],
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

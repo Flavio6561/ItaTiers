@@ -1,0 +1,39 @@
+{
+  "unknown": "#aaaaaa",
+  "text": "#dddddd",
+  "static_separator": "#aaaaaa",
+  "green": "#00dd00",
+  "red": "#dd0000",
+  "region": "#7fc298",
+  "points": "#b2ddf7",
+
+  "eu": "#89f19c",
+
+  "master": "#fde047",
+  "ace": "#fda4af",
+  "specialist": "#d8b4fe",
+  "cadet": "#c4b5fd",
+  "novice": "#c4b5fd",
+  "rookie": "#d1d5db",
+  "retired": "#1e2634",
+
+  "ht1": "#e8ba3a",
+  "lt1": "#d5b355",
+  "ht2": "#c4d3e7",
+  "lt2": "#a0a7b2",
+  "ht3": "#f89f5a",
+  "lt3": "#c67b42",
+  "ht4": "#81749a",
+  "lt4": "#655b79",
+  "ht5": "#8f82a8",
+  "lt5": "#655b79",
+
+  "vanilla": "#c889e6",
+  "uhc": "#d44e50",
+  "sword": "#71bfdd",
+  "smp": "#0f5045",
+  "nethpot": "#8f72a5",
+  "elytra": "#8b8cc8",
+  "diapot": "#d65474",
+  "axe": "#6195d9"
+}
