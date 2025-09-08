@@ -2,13 +2,6 @@
   "providers": [
     {
       "type": "bitmap",
-      "file": "font/misc/globe.png",
-      "height": 12,
-      "ascent": 12,
-      "chars": ["\uF000"]
-    },
-    {
-      "type": "bitmap",
       "file": "font/misc/overall.png",
       "height": 12,
       "ascent": 12,

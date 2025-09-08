@@ -22,13 +22,10 @@ import static com.itatiers.ItaTiersClient.userAgent;
 public class SuperProfile {
     public Status status = Status.SEARCHING;
 
-    public String region;
     public int points;
 
-    public Text displayedRegion;
     public Text displayedPoints;
     public Text pointsTooltip;
-    public Text regionTooltip;
 
     public final ArrayList<GameMode> gameModes = new ArrayList<>();
 
@@ -83,15 +80,12 @@ public class SuperProfile {
 
         if (jsonObject.has("username") && jsonObject.has("uuid") &&
                 jsonObject.has("tiers") && jsonObject.has("points")) {
-            region = "EU";
             points = jsonObject.get("points").getAsInt();
         } else {
             status = Status.NOT_EXISTING;
             return;
         }
 
-        displayedRegion = getRegionText();
-        regionTooltip = getRegionTooltip();
         displayedPoints = getPointsText();
         pointsTooltip = getPointsTooltip();
 
@@ -130,14 +124,6 @@ public class SuperProfile {
             }
         }
         return highest;
-    }
-
-    private Text getRegionText() {
-        return Text.literal(region).setStyle(Style.EMPTY.withColor(ColorControl.getColor("eu")));
-    }
-
-    private Text getRegionTooltip() {
-        return Text.literal("Europe").setStyle(Style.EMPTY.withColor(ColorControl.getColor("eu")));
     }
 
     private Text getPointsText() {

@@ -96,37 +96,22 @@ public class PlayerSearchResultScreen extends Screen {
         }
 
         if (!profile.drawn) {
-            TextWidget regionLabel = new TextWidget(Text.of("Region"), this.textRenderer);
-            regionLabel.setPosition(x - 42, (int) (y + 2.4 * separator));
-            regionLabel.setTextColor(ColorControl.getColor("region"));
-            this.addDrawableChild(regionLabel);
-
             TextWidget overallLabel = new TextWidget(Text.of("Points"), this.textRenderer);
-            overallLabel.setPosition(x - 42, (int) (y + 2.4 * separator) + 16);
+            overallLabel.setPosition(x - 42, (int) (y + 2.4 * separator));
             overallLabel.setTextColor(ColorControl.getColor("points"));
             this.addDrawableChild(overallLabel);
 
-            TextWidget regionIcon = new TextWidget(Icons.GLOBE, this.textRenderer);
-            regionIcon.setPosition(x - 62, (int) (y + 2.4 * separator + 2));
-            regionIcon.setTextColor(ColorControl.getColor("region"));
-            this.addDrawableChild(regionIcon);
-
             TextWidget overallIcon = new TextWidget(Icons.OVERALL, this.textRenderer);
-            overallIcon.setPosition(x - 62, (int) (y + 2.4 * separator + 2) + 16);
+            overallIcon.setPosition(x - 62, (int) (y + 2.4 * separator + 2));
             overallIcon.setTextColor(ColorControl.getColor("points"));
             this.addDrawableChild(overallIcon);
 
-            TextWidget region = new TextWidget(profile.displayedRegion, this.textRenderer);
-            region.setPosition(x + 45 - (profile.displayedRegion.getString().length() - 2) * 3, (int) (y + 2.4 * separator));
-            region.setTooltip(Tooltip.of(profile.regionTooltip));
-            this.addDrawableChild(region);
-
             TextWidget overall = new TextWidget(profile.displayedPoints, this.textRenderer);
-            overall.setPosition(x + 45 - (profile.displayedPoints.getString().length() - 2) * 3, (int) (y + 2.4 * separator) + 16);
+            overall.setPosition(x + 45 - (profile.displayedPoints.getString().length() - 2) * 3, (int) (y + 2.4 * separator));
             overall.setTooltip(Tooltip.of(profile.pointsTooltip));
             this.addDrawableChild(overall);
 
-            drawTierList(profile, x - 62, (int) (y + 2.4 * separator) + 40);
+            drawTierList(profile, x - 62, (int) (y + 2.4 * separator) + 30);
 
             profile.drawn = true;
         }

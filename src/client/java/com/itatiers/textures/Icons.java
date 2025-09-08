@@ -13,7 +13,6 @@ public class Icons {
     public static final Text AXE = Text.literal("\uF016").styled(style -> style.withFont(Identifier.of("minecraft", "gamemodes")));
     public static final Text ELYTRA = Text.literal("\uF017").styled(style -> style.withFont(Identifier.of("minecraft", "gamemodes")));
 
-    public static final Text GLOBE = Text.literal("\uF000").styled(style -> style.withFont(Identifier.of("minecraft", "misc")));
     public static final Text OVERALL = Text.literal("\uF001").styled(style -> style.withFont(Identifier.of("minecraft", "misc")));
     public static final Text CYCLE = Text.literal("\uF002").styled(style -> style.withFont(Identifier.of("minecraft", "misc")));
 
