@@ -14,9 +14,12 @@ public abstract class ModifyNameTagsClientMixin {
     public abstract String getNameForScoreboard();
 
     @ModifyReturnValue(at = @At("RETURN"), method = "getDisplayName")
-    private Text getDisplayName(Text originalNameText) {
-        if (ItaTiersClient.toggleMod)
-            return ItaTiersClient.getModifiedNametag(this.getNameForScoreboard(), originalNameText);
-        return originalNameText;
+    private Text getDisplayName(Text original) {
+        return ItaTiersClient.toggleMod && !ItaTiersClient.isOnLunar ? ItaTiersClient.getModifiedNametag(this.getNameForScoreboard(), original) : original;
+    }
+
+    @ModifyReturnValue(at = @At("RETURN"), method = "getName")
+    private Text getName(Text original) {
+        return ItaTiersClient.toggleMod && ItaTiersClient.isOnLunar ? ItaTiersClient.getModifiedNametag(this.getNameForScoreboard(), original) : original;
     }
 }

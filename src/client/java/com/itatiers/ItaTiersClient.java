@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.resource.ResourceType;
@@ -56,11 +57,15 @@ public class ItaTiersClient implements ClientModInitializer {
     private static KeyBinding autoDetectKey;
     private static KeyBinding cycleKey;
 
+    public static boolean isOnLunar;
+
     @Override
     public void onInitializeClient() {
         ConfigManager.loadConfig();
         clearCache(true);
         CommandRegister.registerCommands();
+
+        isOnLunar = ClientBrandRetriever.getClientModName().contains("lunarclient");
 
         Optional<ModContainer> fabricLoader = FabricLoader.getInstance().getModContainer("itatiers");
 
