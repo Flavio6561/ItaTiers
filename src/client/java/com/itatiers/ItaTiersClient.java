@@ -70,8 +70,8 @@ public class ItaTiersClient implements ClientModInitializer {
                 userAgent += " " + fabricLoader.get().getMetadata().getVersion().getFriendlyString() + " on " + MinecraftClient.getInstance().getGameVersion();
         });
 
-        autoDetectKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Auto Detect Kit", GLFW.GLFW_KEY_Y, "ItaTiers"));
-        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle Gamemodes", GLFW.GLFW_KEY_U, "ItaTiers"));
+        autoDetectKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Auto-detect kit", GLFW.GLFW_KEY_Y, "ItaTiers"));
+        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle the gamemodes", GLFW.GLFW_KEY_U, "ItaTiers"));
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new ColorLoader());
         ClientTickEvents.END_CLIENT_TICK.register(ItaTiersClient::tickUtils);
