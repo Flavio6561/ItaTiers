@@ -4,8 +4,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.itatiers.misc.Modes;
 import com.itatiers.profile.GameMode;
-import com.itatiers.textures.ColorControl;
 import com.itatiers.profile.Status;
+import com.itatiers.textures.ColorControl;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
@@ -23,6 +23,7 @@ public class SuperProfile {
     public Status status = Status.SEARCHING;
 
     public int points;
+    public int overall;
 
     public Text displayedPoints;
     public Text pointsTooltip;
@@ -79,7 +80,8 @@ public class SuperProfile {
         JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
 
         if (jsonObject.has("username") && jsonObject.has("uuid") &&
-                jsonObject.has("tiers") && jsonObject.has("points")) {
+                jsonObject.has("tiers") && jsonObject.has("points") && jsonObject.has("rank")) {
+            overall = jsonObject.get("rank").getAsInt();
             points = jsonObject.get("points").getAsInt();
         } else {
             status = Status.NOT_EXISTING;
@@ -145,6 +147,8 @@ public class SuperProfile {
         else if (points >= 20) overallTooltip += "Cadet";
         else if (points >= 10) overallTooltip += "Novice";
         else overallTooltip = "Rookie";
+
+        overallTooltip += "\nOverall: #" + overall;
 
         return Text.literal(overallTooltip).setStyle(displayedPoints.getStyle());
     }
