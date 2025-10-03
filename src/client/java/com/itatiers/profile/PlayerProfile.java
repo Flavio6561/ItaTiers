@@ -95,7 +95,7 @@ public class PlayerProfile {
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://www.mctiers.it/api/profile/" + name)) //TODO: redo-all
+                    .uri(URI.create("https://api.mctiers.it/api/profile/" + name))
                     .header("User-Agent", userAgent)
                     .GET()
                     .build();
@@ -268,7 +268,7 @@ public class PlayerProfile {
         if (!regular)
             savePlayerImage();
 
-        profileItaTiers = new ItaTiersProfile(name, "https://www.mctiers.it/api/profile/");
+        profileItaTiers = new ItaTiersProfile(name, "https://api.mctiers.it/api/profile/");
 
         status = Status.READY;
     }
