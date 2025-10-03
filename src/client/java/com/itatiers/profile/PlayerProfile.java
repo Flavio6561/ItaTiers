@@ -27,7 +27,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.itatiers.ItaTiersClient.*;
+import static com.itatiers.ItaTiersClient.LOGGER;
+import static com.itatiers.ItaTiersClient.userAgent;
 
 public class PlayerProfile {
     public Status status = Status.SEARCHING;
@@ -95,7 +96,7 @@ public class PlayerProfile {
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://www.mctiers.it/api/profile/" + name)) //TODO: redo-all
+                    .uri(URI.create("https://api.mctiers.it/api/profile/" + name))
                     .header("User-Agent", userAgent)
                     .GET()
                     .build();
@@ -268,7 +269,7 @@ public class PlayerProfile {
         if (!regular)
             savePlayerImage();
 
-        profileItaTiers = new ItaTiersProfile(name, "https://www.mctiers.it/api/profile/");
+        profileItaTiers = new ItaTiersProfile(name, "https://api.mctiers.it/api/profile/");
 
         status = Status.READY;
     }
