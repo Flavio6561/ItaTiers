@@ -255,7 +255,7 @@ public class ItaTiersClient implements ClientModInitializer {
 
     private static PlayerProfile addGetPlayer(String name, boolean priority) {
         for (PlayerProfile profile : playerProfiles) {
-            if (profile.name.equalsIgnoreCase(name)) {
+            if (profile.name.equalsIgnoreCase(name) || profile.originalName.equalsIgnoreCase(name)) {
                 if (priority)
                     PlayerProfileQueue.changeToFirstInQueue(profile);
                 return profile;

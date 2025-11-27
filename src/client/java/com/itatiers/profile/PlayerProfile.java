@@ -39,6 +39,7 @@ public class PlayerProfile {
     public ItaTiersProfile profileItaTiers;
 
     public Text originalNameText;
+    public String originalName;
     public boolean imageSaved = false;
     public int numberOfImageRequests = 0;
     private int numberOfRequests = 0;
@@ -48,6 +49,7 @@ public class PlayerProfile {
         this.regular = regular;
         this.name = name;
         originalNameText = Text.of(name);
+        originalName = name;
     }
 
     public PlayerProfile(String mojangJson, String jsonItaTiers) {
