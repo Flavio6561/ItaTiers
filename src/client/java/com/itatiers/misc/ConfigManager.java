@@ -5,7 +5,10 @@ import com.google.gson.JsonSyntaxException;
 import com.itatiers.ItaTiersClient;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 
@@ -17,6 +20,8 @@ public class ConfigManager {
         boolean toggleMod = true;
         boolean showIcons = true;
         boolean isSeparatorAdaptive = true;
+        boolean showFlag = true;
+        int flagPosition = 0;
         ItaTiersClient.ModesTierDisplay displayMode;
 
         ItaTiersClient.DisplayStatus positionItaTiers;
@@ -42,6 +47,10 @@ public class ConfigManager {
         ItaTiersClient.toggleMod = config.toggleMod;
         ItaTiersClient.showIcons = config.showIcons;
         ItaTiersClient.isSeparatorAdaptive = config.isSeparatorAdaptive;
+        ItaTiersClient.showFlag = config.showFlag;
+        if (config.flagPosition != 0 && config.flagPosition != 1 && config.flagPosition != 2)
+            config.flagPosition = 0;
+        ItaTiersClient.flagPosition = config.flagPosition;
 
         if (Arrays.stream(ItaTiersClient.ModesTierDisplay.values()).toList().contains(config.displayMode))
             ItaTiersClient.displayMode = config.displayMode;
@@ -62,6 +71,11 @@ public class ConfigManager {
         config.toggleMod = ItaTiersClient.toggleMod;
         config.showIcons = ItaTiersClient.showIcons;
         config.isSeparatorAdaptive = ItaTiersClient.isSeparatorAdaptive;
+        config.showFlag = ItaTiersClient.showFlag;
+
+        if (ItaTiersClient.flagPosition != 0 && ItaTiersClient.flagPosition != 1 && ItaTiersClient.flagPosition != 2)
+            ItaTiersClient.flagPosition = 0;
+        config.flagPosition = ItaTiersClient.flagPosition;
         config.displayMode = ItaTiersClient.displayMode;
 
         config.positionItaTiers = ItaTiersClient.positionItaTiers;
@@ -80,6 +94,11 @@ public class ConfigManager {
         currentConfig.toggleMod = ItaTiersClient.toggleMod;
         currentConfig.showIcons = ItaTiersClient.showIcons;
         currentConfig.isSeparatorAdaptive = ItaTiersClient.isSeparatorAdaptive;
+        currentConfig.showFlag = ItaTiersClient.showFlag;
+
+        if (ItaTiersClient.flagPosition != 0 && ItaTiersClient.flagPosition != 1 && ItaTiersClient.flagPosition != 2)
+            ItaTiersClient.flagPosition = 0;
+        currentConfig.flagPosition = ItaTiersClient.flagPosition;
         currentConfig.displayMode = ItaTiersClient.displayMode;
 
         currentConfig.positionItaTiers = ItaTiersClient.positionItaTiers;
