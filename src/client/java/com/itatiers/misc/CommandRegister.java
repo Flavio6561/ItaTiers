@@ -24,9 +24,9 @@ public class CommandRegister {
             return builder.buildFuture();
 
         for (PlayerListEntry entry : client.getNetworkHandler().getPlayerList())
-            if (CommandSource.shouldSuggest(builder.getRemaining().toLowerCase(), entry.getProfile().getName().toLowerCase()) &&
-                    entry.getProfile().getName().length() > 2)
-                builder.suggest(entry.getProfile().getName(), () -> "Search tiers for " + entry.getProfile().getName());
+            if (CommandSource.shouldSuggest(builder.getRemaining().toLowerCase(), entry.getProfile().name().toLowerCase()) &&
+                    entry.getProfile().name().length() > 2)
+                builder.suggest(entry.getProfile().name(), () -> "Search tiers for " + entry.getProfile().name());
 
         if (CommandSource.shouldSuggest(builder.getRemaining().toLowerCase(), "config"))
             builder.suggest("-config", () -> "Open the config screen");

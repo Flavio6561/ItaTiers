@@ -1,7 +1,8 @@
 package com.itatiers;
 
-import com.mojang.brigadier.context.CommandContext;
-import com.itatiers.misc.*;
+import com.itatiers.misc.CommandRegister;
+import com.itatiers.misc.ConfigManager;
+import com.itatiers.misc.Modes;
 import com.itatiers.profile.GameMode;
 import com.itatiers.profile.PlayerProfile;
 import com.itatiers.profile.Status;
@@ -10,6 +11,7 @@ import com.itatiers.screens.ConfigScreen;
 import com.itatiers.screens.PlayerSearchResultScreen;
 import com.itatiers.textures.ColorControl;
 import com.itatiers.textures.ColorLoader;
+import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -20,10 +22,12 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import org.apache.commons.io.FileUtils;
 import org.lwjgl.glfw.GLFW;
@@ -33,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -54,6 +59,7 @@ public class ItaTiersClient implements ClientModInitializer {
     public static Modes activeItaTiersMode = Modes.VANILLA;
 
     private static KeyBinding autoDetectKey;
+    public static KeyBinding openClosestPlayerProfile;
     private static KeyBinding cycleKey;
 
     @Override
@@ -70,8 +76,10 @@ public class ItaTiersClient implements ClientModInitializer {
                 userAgent += " " + fabricLoader.get().getMetadata().getVersion().getFriendlyString() + " on " + MinecraftClient.getInstance().getGameVersion();
         });
 
-        autoDetectKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Auto-detect kit", GLFW.GLFW_KEY_Y, "ItaTiers"));
-        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle the gamemodes", GLFW.GLFW_KEY_U, "ItaTiers"));
+        KeyBinding.Category category = KeyBinding.Category.create(Identifier.of("itatiers"));
+        autoDetectKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Auto Detect Kit", GLFW.GLFW_KEY_Y, category));
+        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle the gamemodes", GLFW.GLFW_KEY_U, category));
+        openClosestPlayerProfile = KeyBindingHelper.registerKeyBinding(new KeyBinding("Open Closest Player Profile", GLFW.GLFW_KEY_H, category));
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new ColorLoader());
         ClientTickEvents.END_CLIENT_TICK.register(ItaTiersClient::tickUtils);
@@ -204,7 +212,7 @@ public class ItaTiersClient implements ClientModInitializer {
         if (!client.isFinishedLoading()) return;
 
         if (ConfigScreen.defaultProfile == null) {
-            ConfigScreen.ownProfile = new PlayerProfile(client.getGameProfile().getName(), false);
+            ConfigScreen.ownProfile = new PlayerProfile(client.getGameProfile().name(), false);
             PlayerProfileQueue.enqueue(ConfigScreen.ownProfile);
 
             ConfigScreen.defaultProfile = new PlayerProfile("""
@@ -239,6 +247,31 @@ public class ItaTiersClient implements ClientModInitializer {
 
             sendMessageToPlayer(message, true);
         }
+
+        if (openClosestPlayerProfile.wasPressed()) {
+            String nearestPlayerName = getNearestPlayerName();
+            if (nearestPlayerName != null)
+                searchPlayer(nearestPlayerName);
+            else
+                sendMessageToPlayer(Text.literal("No players in render distance").setStyle(Style.EMPTY.withColor(Colors.RED)), true);
+        }
+    }
+
+    public static String getNearestPlayerName() {
+        MinecraftClient minecraftClient = MinecraftClient.getInstance();
+        PlayerEntity self = minecraftClient.player;
+        if (self == null || self.getEntityWorld() == null)
+            return null;
+
+        PlayerEntity playerEntity = self.getEntityWorld().getPlayers().stream()
+                .filter(player -> player != self)
+                .filter(player -> self.distanceTo(player) < MinecraftClient.getInstance().gameRenderer.getViewDistanceBlocks())
+                .min(Comparator.comparingDouble(self::distanceTo))
+                .orElse(null);
+
+        if (playerEntity != null)
+            return playerEntity.getNameForScoreboard();
+        return null;
     }
 
     public static Text cycleModes() {
