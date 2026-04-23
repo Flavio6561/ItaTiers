@@ -11,13 +11,16 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -128,16 +131,16 @@ public class PlayerSearchResultScreen extends Screen {
 
         TextWidget icon = new TextWidget(mode.name.icon, this.textRenderer);
         icon.setPosition(x, y + 3);
-        this.addDrawableChild(icon);
+        addDrawableChild(icon);
 
         TextWidget label = new TextWidget(mode.name.label, this.textRenderer);
         label.setPosition(x + 20, y);
-        this.addDrawableChild(label);
+        addDrawableChild(label);
 
         TextWidget tier = new TextWidget(mode.displayedTier, this.textRenderer);
         tier.setPosition(x + 105 - (mode.displayedTier.getString().length() - 3) * 3, y);
         tier.setTooltip(Tooltip.of(mode.tierTooltip));
-        this.addDrawableChild(tier);
+        addDrawableChild(tier);
 
         mode.drawn = true;
 
@@ -171,5 +174,14 @@ public class PlayerSearchResultScreen extends Screen {
     @Override
     protected void init() {
         playerProfile.resetDrawnStatus();
+
+        addDrawableChild(ButtonWidget.builder(Icons.NAMEMC, (ignored) -> {
+            MinecraftClient minecraftClient = MinecraftClient.getInstance();
+            minecraftClient.setScreen(new ConfirmLinkScreen((confirmed) -> {
+                if (confirmed)
+                    Util.getOperatingSystem().open("https://namemc.com/profile/" + playerProfile.uuid);
+                minecraftClient.setScreen(this);
+            }, "https://namemc.com/profile/" + playerProfile.uuid, true));
+        }).dimensions(width - 20 - 5, height - 20 - 5, 20, 20).tooltip(Tooltip.of(Text.literal("Open " + playerProfile.name + "'s NameMC page"))).build());
     }
 }

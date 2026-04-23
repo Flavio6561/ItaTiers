@@ -15,6 +15,7 @@ public class Icons {
 
     public static final Text OVERALL = Text.literal("\uF001").styled(style -> style.withFont(Identifier.of("minecraft", "misc")));
     public static final Text CYCLE = Text.literal("\uF002").styled(style -> style.withFont(Identifier.of("minecraft", "misc")));
+    public static final Text NAMEMC = Text.literal("\uF003").styled(style -> style.withFont(Identifier.of("minecraft", "misc")));
 
     public static final Text VANILLA_TAG = Text.literal("\uF010").styled(style -> style.withFont(Identifier.of("minecraft", "gamemodes-tags")));
     public static final Text SWORD_TAG = Text.literal("\uF011").styled(style -> style.withFont(Identifier.of("minecraft", "gamemodes-tags")));

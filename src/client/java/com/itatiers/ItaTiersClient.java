@@ -207,8 +207,28 @@ public class ItaTiersClient implements ClientModInitializer {
             ConfigScreen.ownProfile = new PlayerProfile(client.getGameProfile().getName(), false);
             PlayerProfileQueue.enqueue(ConfigScreen.ownProfile);
 
-            ConfigScreen.defaultProfile = new PlayerProfile("{\"id\":\"da300ba3690b43228feacf1628825c88\",\"name\":\"Sbiguss\"}",
-                    "{\"uuid\":\"da300ba3690b43228feacf1628825c88\",\"username\":\"Sbiguss\",\"retired\":0,\"tiers\":{\"elytra\":\"HT3\",\"uhc\":\"LT2\",\"nethpot\":\"HT3\",\"vanilla\":\"LT4\",\"axe\":\"HT2\",\"smp\":\"HT2\",\"diapot\":\"HT2\",\"sword\":\"HT2\"},\"points\":151}");
+            ConfigScreen.defaultProfile = new PlayerProfile("""
+                    {
+                      "id" : "da300ba3690b43228feacf1628825c88",
+                      "name" : "Sbiguss"
+                    }""", """
+                    {
+                      "uuid": "da300ba3690b43228feacf1628825c88",
+                      "username": "Sbiguss",
+                      "retired": true,
+                      "tiers": {
+                        "axe": "HT2",
+                        "diapot": "HT1",
+                        "elytra": "HT3",
+                        "nethpot": "LT2",
+                        "smp": "LT1",
+                        "sword": "HT2",
+                        "uhc": "HT2",
+                        "vanilla": "LT4"
+                      },
+                      "points": 217,
+                      "rank": 1
+                    }""");
         }
 
         if (autoDetectKey.wasPressed())
@@ -281,9 +301,7 @@ public class ItaTiersClient implements ClientModInitializer {
     }
 
     public static int searchPlayer(String name) {
-        if (name.equalsIgnoreCase("toggle"))
-            toggleMod(null);
-        else if (name.equalsIgnoreCase("config"))
+        if (name.equalsIgnoreCase("-config"))
             CompletableFuture.delayedExecutor(50, TimeUnit.MILLISECONDS).execute(ItaTiersClient::openConfigScreen);
         else
             CompletableFuture.delayedExecutor(50, TimeUnit.MILLISECONDS).execute(() -> openPlayerSearchResultScreen(addGetPlayer(name, true)));

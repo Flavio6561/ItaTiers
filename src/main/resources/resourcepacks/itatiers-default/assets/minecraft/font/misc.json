@@ -13,6 +13,13 @@
       "height": 7,
       "ascent": 7,
       "chars": ["\uF002"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/namemc.png",
+      "height": 15,
+      "ascent": 11,
+      "chars": ["\uF003"]
     }
   ]
 }
