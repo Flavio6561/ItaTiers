@@ -20,6 +20,27 @@
       "height": 15,
       "ascent": 11,
       "chars": ["\uF003"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/itflag.png",
+      "height": 9,
+      "ascent": 8,
+      "chars": ["\uF004"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/itflag.png",
+      "height": 15,
+      "ascent": 11,
+      "chars": ["\uF005"]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/misc/noitflag.png",
+      "height": 15,
+      "ascent": 11,
+      "chars": ["\uF006"]
     }
   ]
 }

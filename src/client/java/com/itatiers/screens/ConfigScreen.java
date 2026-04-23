@@ -38,6 +38,8 @@ public class ConfigScreen extends Screen {
     private ButtonWidget clearPlayerCache;
     private ButtonWidget enableOwnProfile;
     private ButtonWidget positionItaTiers;
+    public ButtonWidget toggleFlag;
+    public ButtonWidget cycleFlagPosition;
 
     private ButtonWidget activeMode;
 
@@ -70,6 +72,8 @@ public class ConfigScreen extends Screen {
         toggleSeparatorMode.setPosition(width / 2 - 90, distance + 25);
         cycleDisplayMode.setPosition(width / 2 - 90, distance + 50);
         positionItaTiers.setPosition(width / 2 - 88 - 2, distance + 75);
+        toggleFlag.setPosition(width / 2 - 88 - 2 + 28 + 2, distance + 75);
+        cycleFlagPosition.setPosition(width / 2 - 88 - 2 + 28 + 2 + 28 + 2, distance + 75);
         activeMode.setPosition(width / 2 + 2, distance + 75);
         enableOwnProfile.setPosition(width / 2 - 90, distance + 100);
 
@@ -113,7 +117,7 @@ public class ConfigScreen extends Screen {
         positionItaTiers = ButtonWidget.builder(Text.of(ItaTiersClient.positionItaTiers.getStatus()), (buttonWidget) -> {
             ItaTiersClient.cycleItaTiersPosition();
             buttonWidget.setMessage(Text.of(ItaTiersClient.positionItaTiers.getStatus()));
-        }).dimensions(width / 2 - 88 - 2, distance + 75, 88, 20).build();
+        }).dimensions(width / 2 - 88 - 2, distance + 75, 28, 20).build();
 
         positionItaTiers.setTooltip(Tooltip.of(Text.of("""
                 Right: Tiers will be displayed on the right of the nametag
@@ -122,6 +126,20 @@ public class ConfigScreen extends Screen {
 
         activeMode = ButtonWidget.builder(Icons.CYCLE, (buttonWidget) -> ItaTiersClient.cycleModes()).dimensions(width / 2 + 2, distance + 75, 44, 20).build();
         activeMode.setTooltip(Tooltip.of(Text.of("Cycle active gamemode")));
+
+        toggleFlag = ButtonWidget.builder(ItaTiersClient.showFlag ? Icons.IT_FLAG_BUTTON: Icons.NO_IT_FLAG_BUTTON, (buttonWidget) -> {
+            ItaTiersClient.toggleFlag();
+            cycleFlagPosition.active = ItaTiersClient.showFlag;
+            buttonWidget.setMessage(ItaTiersClient.showFlag ? Icons.IT_FLAG_BUTTON: Icons.NO_IT_FLAG_BUTTON);
+            toggleFlag.setTooltip(Tooltip.of(Text.of(ItaTiersClient.showFlag ? "Disable the flag in the nametag" : "Enable the flag in the nametag")));
+        }).dimensions(width / 2 - 88 - 2 + 28 + 2, distance + 75, 28, 20).build();
+
+        cycleFlagPosition = ButtonWidget.builder(Icons.CYCLE, (buttonWidget) -> {
+            ItaTiersClient.cycleFlagPosition();
+            cycleFlagPosition.setTooltip(Tooltip.of(Text.of("Cycle flag position in the nametag")));
+        }).dimensions(width / 2 - 88 - 2 + 28 + 2 + 28 + 2, distance + 75, 28, 20).build();
+
+        cycleFlagPosition.active = ItaTiersClient.showFlag;
 
         if (ownProfile.status == Status.READY) {
             enableOwnProfile = ButtonWidget.builder(Text.literal(useOwnProfile ? "Preview default" : "Preview " + ownProfile.name).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (buttonWidget) -> {
@@ -147,6 +165,8 @@ public class ConfigScreen extends Screen {
         this.addDrawableChild(toggleSeparatorMode);
         this.addDrawableChild(cycleDisplayMode);
         this.addDrawableChild(positionItaTiers);
+        this.addDrawableChild(toggleFlag);
+        this.addDrawableChild(cycleFlagPosition);
         this.addDrawableChild(activeMode);
         this.addDrawableChild(enableOwnProfile);
         this.addDrawableChild(clearPlayerCache);

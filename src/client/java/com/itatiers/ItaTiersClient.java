@@ -11,6 +11,7 @@ import com.itatiers.screens.ConfigScreen;
 import com.itatiers.screens.PlayerSearchResultScreen;
 import com.itatiers.textures.ColorControl;
 import com.itatiers.textures.ColorLoader;
+import com.itatiers.textures.Icons;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -53,6 +54,8 @@ public class ItaTiersClient implements ClientModInitializer {
     public static boolean toggleMod = true;
     public static boolean showIcons = true;
     public static boolean isSeparatorAdaptive = true;
+    public static boolean showFlag = true;
+    public static int flagPosition = 0;
     public static ModesTierDisplay displayMode = ModesTierDisplay.ADAPTIVE_HIGHEST;
 
     public static DisplayStatus positionItaTiers = DisplayStatus.LEFT;
@@ -165,10 +168,22 @@ public class ItaTiersClient implements ClientModInitializer {
                 return returnValue;
 
             MutableText separator = Text.literal(" | ").setStyle(isSeparatorAdaptive ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
-            returnValue.append(Text.literal("").append(separator).append(shown.displayedTier));
+
+            returnValue.append(separator);
+
+            if (showFlag && flagPosition == 2)
+                returnValue.append(Icons.IT_FLAG).append(" ");
+
+            returnValue.append(shown.displayedTier);
+
+            if (showFlag && flagPosition == 1)
+                returnValue.append(" ").append(Icons.IT_FLAG);
 
             if (showIcons)
                 returnValue.append(Text.literal(" ").append(shown.name.iconTag));
+
+            if (showFlag && flagPosition == 0)
+                returnValue.append(" ").append(Icons.IT_FLAG);
         }
         return returnValue;
     }
@@ -192,9 +207,21 @@ public class ItaTiersClient implements ClientModInitializer {
 
             MutableText separator = Text.literal(" | ").setStyle(isSeparatorAdaptive ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
 
+            if (showFlag && flagPosition == 0)
+                returnValue.append(Icons.IT_FLAG).append(" ");
+
             if (showIcons)
-                returnValue = Text.literal("").append(shown.name.iconTag).append(" ");
-            returnValue.append(Text.literal("").append(shown.displayedTier).append(separator));
+                returnValue.append(shown.name.iconTag).append(" ");
+
+            if (showFlag && flagPosition == 1)
+                returnValue.append(Icons.IT_FLAG).append(" ");
+
+            returnValue.append(shown.displayedTier);
+
+            if (showFlag && flagPosition == 2)
+                returnValue.append(" ").append(Icons.IT_FLAG);
+
+            returnValue.append(separator);
         }
         return returnValue;
     }
@@ -352,6 +379,18 @@ public class ItaTiersClient implements ClientModInitializer {
         }
     }
 
+    public static void toggleFlag() {
+        showFlag = !showFlag;
+        updateAllTags();
+        ConfigManager.saveConfig();
+    }
+
+    public static void cycleFlagPosition() {
+        flagPosition = (flagPosition + 1) % 3;
+        updateAllTags();
+        ConfigManager.saveConfig();
+    }
+
     public static void toggleSeparatorAdaptive() {
         isSeparatorAdaptive = !isSeparatorAdaptive;
         updateAllTags();
@@ -407,8 +446,8 @@ public class ItaTiersClient implements ClientModInitializer {
 
         public String getStatus() {
             if (this.toString().equalsIgnoreCase("RIGHT"))
-                return "Right";
-            return "Left";
+                return "→";
+            return "←";
         }
     }
 }
