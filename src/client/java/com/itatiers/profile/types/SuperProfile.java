@@ -9,15 +9,9 @@ import com.itatiers.textures.ColorControl;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import static com.itatiers.ItaTiersClient.userAgent;
 
 public class SuperProfile {
     public Status status = Status.SEARCHING;
@@ -33,47 +27,9 @@ public class SuperProfile {
     public GameMode highest;
     public String originalJson;
     public boolean drawn = false;
-    private int numberOfRequests = 0;
-
-    protected SuperProfile(String name, String apiUrl) {
-        CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS).execute(() -> buildRequest(name, apiUrl));
-    }
 
     protected SuperProfile(String json) {
         CompletableFuture.delayedExecutor(20, TimeUnit.MILLISECONDS).execute(() -> parseJson(json));
-    }
-
-    private void buildRequest(String name, String apiUrl) {
-        if (numberOfRequests == 5 || status != Status.SEARCHING) {
-            status = Status.TIMEOUTED;
-            return;
-        }
-
-        numberOfRequests++;
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(apiUrl + name))
-                .header("User-Agent", userAgent)
-                .GET()
-                .build();
-
-        HttpClient.newHttpClient()
-                .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenAccept(response -> {
-                    if (response.statusCode() == 404) {
-                        status = Status.NOT_EXISTING;
-                        return;
-                    } else if (response.statusCode() != 200) {
-                        status = Status.API_ISSUE;
-                        return;
-                    }
-
-                    parseJson(response.body());
-                })
-                .exceptionally(exception -> {
-                    CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS).execute(() -> buildRequest(name, apiUrl));
-                    return null;
-                });
     }
 
     public void parseJson(String json) {

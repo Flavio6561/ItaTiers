@@ -1,7 +1,8 @@
 package com.itatiers;
 
-import com.mojang.brigadier.context.CommandContext;
-import com.itatiers.misc.*;
+import com.itatiers.misc.CommandRegister;
+import com.itatiers.misc.ConfigManager;
+import com.itatiers.misc.Modes;
 import com.itatiers.profile.GameMode;
 import com.itatiers.profile.PlayerProfile;
 import com.itatiers.profile.Status;
@@ -10,6 +11,8 @@ import com.itatiers.screens.ConfigScreen;
 import com.itatiers.screens.PlayerSearchResultScreen;
 import com.itatiers.textures.ColorControl;
 import com.itatiers.textures.ColorLoader;
+import com.itatiers.textures.Icons;
+import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -21,10 +24,12 @@ import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import org.apache.commons.io.FileUtils;
 import org.lwjgl.glfw.GLFW;
@@ -33,7 +38,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -42,20 +49,25 @@ import java.util.concurrent.TimeUnit;
 public class ItaTiersClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(ItaTiersClient.class);
     public static String userAgent = "ItaTiers (https://github.com/Flavio6561/ItaTiers)";
-    public static boolean anonymousUserAgent = false;
+    public static String version = "0.0";
     private static final ArrayList<PlayerProfile> playerProfiles = new ArrayList<>();
     private static final HashMap<String, Text> playerTexts = new HashMap<>();
 
     public static boolean toggleMod = true;
     public static boolean showIcons = true;
     public static boolean isSeparatorAdaptive = true;
+    public static boolean showFlag = true;
+    public static int flagPosition = 0;
     public static ModesTierDisplay displayMode = ModesTierDisplay.ADAPTIVE_HIGHEST;
 
     public static DisplayStatus positionItaTiers = DisplayStatus.LEFT;
     public static Modes activeItaTiersMode = Modes.VANILLA;
 
     private static KeyBinding autoDetectKey;
+    public static KeyBinding openClosestPlayerProfile;
     private static KeyBinding cycleKey;
+
+    public static HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
     public static boolean isOnLunar;
 
@@ -71,12 +83,14 @@ public class ItaTiersClient implements ClientModInitializer {
 
         fabricLoader.ifPresent(tiers -> {
             ResourceManagerHelper.registerBuiltinResourcePack(Identifier.of("itatiers", "itatiers-default"), tiers, ResourcePackActivationType.ALWAYS_ENABLED);
-            if (!anonymousUserAgent)
-                userAgent += " " + fabricLoader.get().getMetadata().getVersion().getFriendlyString() + " on " + MinecraftClient.getInstance().getGameVersion();
+
+            version = fabricLoader.get().getMetadata().getVersion().getFriendlyString();
+            userAgent += " " + version + " on " + MinecraftClient.getInstance().getGameVersion();
         });
 
         autoDetectKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Auto-detect kit", GLFW.GLFW_KEY_Y, "ItaTiers"));
-        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle the gamemodes", GLFW.GLFW_KEY_U, "ItaTiers"));
+        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle gamemodes", GLFW.GLFW_KEY_U, "ItaTiers"));
+        openClosestPlayerProfile = KeyBindingHelper.registerKeyBinding(new KeyBinding("Open the closest player profile", GLFW.GLFW_KEY_H, "ItaTiers"));
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new ColorLoader());
         ClientTickEvents.END_CLIENT_TICK.register(ItaTiersClient::tickUtils);
@@ -162,10 +176,22 @@ public class ItaTiersClient implements ClientModInitializer {
                 return returnValue;
 
             MutableText separator = Text.literal(" | ").setStyle(isSeparatorAdaptive ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
-            returnValue.append(Text.literal("").append(separator).append(shown.displayedTier));
+
+            returnValue.append(separator);
+
+            if (showFlag && flagPosition == 2)
+                returnValue.append(Icons.IT_FLAG).append(" ");
+
+            returnValue.append(shown.displayedTier);
+
+            if (showFlag && flagPosition == 1)
+                returnValue.append(" ").append(Icons.IT_FLAG);
 
             if (showIcons)
                 returnValue.append(Text.literal(" ").append(shown.name.iconTag));
+
+            if (showFlag && flagPosition == 0)
+                returnValue.append(" ").append(Icons.IT_FLAG);
         }
         return returnValue;
     }
@@ -189,9 +215,21 @@ public class ItaTiersClient implements ClientModInitializer {
 
             MutableText separator = Text.literal(" | ").setStyle(isSeparatorAdaptive ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
 
+            if (showFlag && flagPosition == 0)
+                returnValue.append(Icons.IT_FLAG).append(" ");
+
             if (showIcons)
-                returnValue = Text.literal("").append(shown.name.iconTag).append(" ");
-            returnValue.append(Text.literal("").append(shown.displayedTier).append(separator));
+                returnValue.append(shown.name.iconTag).append(" ");
+
+            if (showFlag && flagPosition == 1)
+                returnValue.append(Icons.IT_FLAG).append(" ");
+
+            returnValue.append(shown.displayedTier);
+
+            if (showFlag && flagPosition == 2)
+                returnValue.append(" ").append(Icons.IT_FLAG);
+
+            returnValue.append(separator);
         }
         return returnValue;
     }
@@ -212,8 +250,28 @@ public class ItaTiersClient implements ClientModInitializer {
             ConfigScreen.ownProfile = new PlayerProfile(client.getGameProfile().getName(), false);
             PlayerProfileQueue.enqueue(ConfigScreen.ownProfile);
 
-            ConfigScreen.defaultProfile = new PlayerProfile("{\"id\":\"da300ba3690b43228feacf1628825c88\",\"name\":\"Sbiguss\"}",
-                    "{\"uuid\":\"da300ba3690b43228feacf1628825c88\",\"username\":\"Sbiguss\",\"retired\":0,\"tiers\":{\"elytra\":\"HT3\",\"uhc\":\"LT2\",\"nethpot\":\"HT3\",\"vanilla\":\"LT4\",\"axe\":\"HT2\",\"smp\":\"HT2\",\"diapot\":\"HT2\",\"sword\":\"HT2\"},\"points\":151}");
+            ConfigScreen.defaultProfile = new PlayerProfile("""
+                    {
+                      "id" : "da300ba3690b43228feacf1628825c88",
+                      "name" : "Sbiguss"
+                    }""", """
+                    {
+                      "uuid": "da300ba3690b43228feacf1628825c88",
+                      "username": "Sbiguss",
+                      "retired": true,
+                      "tiers": {
+                        "axe": "HT2",
+                        "diapot": "HT1",
+                        "elytra": "HT3",
+                        "nethpot": "LT2",
+                        "smp": "LT1",
+                        "sword": "HT2",
+                        "uhc": "HT2",
+                        "vanilla": "LT4"
+                      },
+                      "points": 217,
+                      "rank": 1
+                    }""");
         }
 
         if (autoDetectKey.wasPressed())
@@ -224,6 +282,31 @@ public class ItaTiersClient implements ClientModInitializer {
 
             sendMessageToPlayer(message, true);
         }
+
+        if (openClosestPlayerProfile.wasPressed()) {
+            String nearestPlayerName = getNearestPlayerName();
+            if (nearestPlayerName != null)
+                searchPlayer(nearestPlayerName);
+            else
+                sendMessageToPlayer(Text.literal("No players in render distance").setStyle(Style.EMPTY.withColor(Colors.RED)), true);
+        }
+    }
+
+    public static String getNearestPlayerName() {
+        MinecraftClient minecraftClient = MinecraftClient.getInstance();
+        PlayerEntity self = minecraftClient.player;
+        if (self == null || self.getWorld() == null)
+            return null;
+
+        PlayerEntity playerEntity = self.getWorld().getPlayers().stream()
+                .filter(player -> player != self)
+                .filter(player -> self.distanceTo(player) < MinecraftClient.getInstance().gameRenderer.getViewDistance())
+                .min(Comparator.comparingDouble(self::distanceTo))
+                .orElse(null);
+
+        if (playerEntity != null)
+            return playerEntity.getNameForScoreboard();
+        return null;
     }
 
     public static Text cycleModes() {
@@ -258,7 +341,7 @@ public class ItaTiersClient implements ClientModInitializer {
         ConfigManager.saveConfig();
     }
 
-    private static PlayerProfile addGetPlayer(String name, boolean priority) {
+    public static PlayerProfile addGetPlayer(String name, boolean priority) {
         for (PlayerProfile profile : playerProfiles) {
             if (profile.name.equalsIgnoreCase(name) || profile.originalName.equalsIgnoreCase(name)) {
                 if (priority)
@@ -286,9 +369,7 @@ public class ItaTiersClient implements ClientModInitializer {
     }
 
     public static int searchPlayer(String name) {
-        if (name.equalsIgnoreCase("toggle"))
-            toggleMod(null);
-        else if (name.equalsIgnoreCase("config"))
+        if (name.equalsIgnoreCase("-config"))
             CompletableFuture.delayedExecutor(50, TimeUnit.MILLISECONDS).execute(ItaTiersClient::openConfigScreen);
         else
             CompletableFuture.delayedExecutor(50, TimeUnit.MILLISECONDS).execute(() -> openPlayerSearchResultScreen(addGetPlayer(name, true)));
@@ -304,6 +385,18 @@ public class ItaTiersClient implements ClientModInitializer {
         } catch (IOException e) {
             LOGGER.warn("Error deleting cache folder: {}", e.getMessage());
         }
+    }
+
+    public static void toggleFlag() {
+        showFlag = !showFlag;
+        updateAllTags();
+        ConfigManager.saveConfig();
+    }
+
+    public static void cycleFlagPosition() {
+        flagPosition = (flagPosition + 1) % 3;
+        updateAllTags();
+        ConfigManager.saveConfig();
     }
 
     public static void toggleSeparatorAdaptive() {
@@ -361,8 +454,8 @@ public class ItaTiersClient implements ClientModInitializer {
 
         public String getStatus() {
             if (this.toString().equalsIgnoreCase("RIGHT"))
-                return "Right";
-            return "Left";
+                return "→";
+            return "←";
         }
     }
 }

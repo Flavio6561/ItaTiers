@@ -29,9 +29,7 @@ public class CommandRegister {
                 builder.suggest(entry.getProfile().getName(), () -> "Search tiers for " + entry.getProfile().getName());
 
         if (CommandSource.shouldSuggest(builder.getRemaining().toLowerCase(), "config"))
-            builder.suggest("config", () -> "Open the config screen");
-        if (CommandSource.shouldSuggest(builder.getRemaining().toLowerCase(), "toggle"))
-            builder.suggest("toggle", () -> "Toggle " + (ItaTiersClient.toggleMod ? "off" : "on") + " Tiers");
+            builder.suggest("-config", () -> "Open the config screen");
 
         return builder.buildFuture();
     }
