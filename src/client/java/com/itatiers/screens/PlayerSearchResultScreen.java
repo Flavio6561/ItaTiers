@@ -1,23 +1,27 @@
 package com.itatiers.screens;
 
 import com.itatiers.ItaTiersClient;
-import com.itatiers.textures.ColorControl;
-import com.itatiers.textures.Icons;
 import com.itatiers.profile.GameMode;
 import com.itatiers.profile.PlayerProfile;
 import com.itatiers.profile.Status;
 import com.itatiers.profile.types.SuperProfile;
+import com.itatiers.textures.ColorControl;
+import com.itatiers.textures.Icons;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,7 +45,7 @@ public class PlayerSearchResultScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (playerProfile.status == Status.NOT_EXISTING) {
             this.close();
-            sendMessageToPlayer(playerProfile.name + " was not found or isn't a premium account", ColorControl.getColor("red"), false);
+            sendMessageToPlayer(playerProfile.name + " was not found in the tierlist", ColorControl.getColor("red"), false);
             return;
         } else if (playerProfile.status == Status.TIMEOUTED) {
             this.close();
@@ -49,7 +53,7 @@ public class PlayerSearchResultScreen extends Screen {
             return;
         } else if (playerProfile.status == Status.API_ISSUE) {
             this.close();
-            sendMessageToPlayer(playerProfile.name + "'s search failed. This is likely a Mojang issue. " + "Contact flavio6561 on Discord for support", ColorControl.getColor("red"), false);
+            sendMessageToPlayer(playerProfile.name + "'s search failed. mctiers.it might be down, try again later", ColorControl.getColor("red"), false);
             return;
         }
 
@@ -96,14 +100,12 @@ public class PlayerSearchResultScreen extends Screen {
         }
 
         if (!profile.drawn) {
-            TextWidget overallLabel = new TextWidget(Text.of("Points"), this.textRenderer);
+            TextWidget overallLabel = new TextWidget(Text.literal("Points").setStyle(Style.EMPTY.withColor(ColorControl.getColor("points"))), this.textRenderer);
             overallLabel.setPosition(x - 42, (int) (y + 2.4 * separator));
-            overallLabel.setTextColor(ColorControl.getColor("points"));
             this.addDrawableChild(overallLabel);
 
             TextWidget overallIcon = new TextWidget(Icons.OVERALL, this.textRenderer);
             overallIcon.setPosition(x - 62, (int) (y + 2.4 * separator + 2));
-            overallIcon.setTextColor(ColorControl.getColor("points"));
             this.addDrawableChild(overallIcon);
 
             TextWidget overall = new TextWidget(profile.displayedPoints, this.textRenderer);
@@ -128,16 +130,16 @@ public class PlayerSearchResultScreen extends Screen {
 
         TextWidget icon = new TextWidget(mode.name.icon, this.textRenderer);
         icon.setPosition(x, y + 3);
-        this.addDrawableChild(icon);
+        addDrawableChild(icon);
 
         TextWidget label = new TextWidget(mode.name.label, this.textRenderer);
         label.setPosition(x + 20, y);
-        this.addDrawableChild(label);
+        addDrawableChild(label);
 
         TextWidget tier = new TextWidget(mode.displayedTier, this.textRenderer);
         tier.setPosition(x + 105 - (mode.displayedTier.getString().length() - 3) * 3, y);
         tier.setTooltip(Tooltip.of(mode.tierTooltip));
-        this.addDrawableChild(tier);
+        addDrawableChild(tier);
 
         mode.drawn = true;
 
@@ -171,5 +173,14 @@ public class PlayerSearchResultScreen extends Screen {
     @Override
     protected void init() {
         playerProfile.resetDrawnStatus();
+
+        addDrawableChild(ButtonWidget.builder(Icons.NAMEMC, (ignored) -> {
+            MinecraftClient minecraftClient = MinecraftClient.getInstance();
+            minecraftClient.setScreen(new ConfirmLinkScreen((confirmed) -> {
+                if (confirmed)
+                    Util.getOperatingSystem().open("https://namemc.com/profile/" + playerProfile.uuid);
+                minecraftClient.setScreen(this);
+            }, "https://namemc.com/profile/" + playerProfile.uuid, true));
+        }).dimensions(width - 20 - 5, height - 20 - 5, 20, 20).tooltip(Tooltip.of(Text.literal("Open " + playerProfile.name + "'s NameMC page"))).build());
     }
 }

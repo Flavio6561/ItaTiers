@@ -4,11 +4,6 @@ import com.itatiers.misc.Modes;
 import com.itatiers.profile.GameMode;
 
 public class ItaTiersProfile extends SuperProfile {
-    public ItaTiersProfile(String name, String apiUrl) {
-        super(name, apiUrl);
-        addGamemodes();
-    }
-
     public ItaTiersProfile(String json) {
         super(json);
         addGamemodes();
