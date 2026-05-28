@@ -45,7 +45,7 @@ public class PlayerSearchResultScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (playerProfile.status == Status.NOT_EXISTING) {
             this.close();
-            sendMessageToPlayer(playerProfile.name + " was not found or isn't a premium account", ColorControl.getColor("red"), false);
+            sendMessageToPlayer(playerProfile.name + " was not found in the tierlist", ColorControl.getColor("red"), false);
             return;
         } else if (playerProfile.status == Status.TIMEOUTED) {
             this.close();
@@ -53,7 +53,7 @@ public class PlayerSearchResultScreen extends Screen {
             return;
         } else if (playerProfile.status == Status.API_ISSUE) {
             this.close();
-            sendMessageToPlayer(playerProfile.name + "'s search failed. This is likely a Mojang issue. " + "Contact flavio6561 on Discord for support", ColorControl.getColor("red"), false);
+            sendMessageToPlayer(playerProfile.name + "'s search failed. mctiers.it might be down, try again later", ColorControl.getColor("red"), false);
             return;
         }
 

@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -47,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 public class ItaTiersClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(ItaTiersClient.class);
     public static String userAgent = "ItaTiers (https://github.com/Flavio6561/ItaTiers)";
-    public static boolean anonymousUserAgent = false;
+    public static String version = "0.0";
     private static final ArrayList<PlayerProfile> playerProfiles = new ArrayList<>();
     private static final HashMap<String, Text> playerTexts = new HashMap<>();
 
@@ -65,6 +66,8 @@ public class ItaTiersClient implements ClientModInitializer {
     public static KeyBinding openClosestPlayerProfile;
     private static KeyBinding cycleKey;
 
+    public static HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+
     @Override
     public void onInitializeClient() {
         ConfigManager.loadConfig();
@@ -75,14 +78,15 @@ public class ItaTiersClient implements ClientModInitializer {
 
         fabricLoader.ifPresent(tiers -> {
             ResourceManagerHelper.registerBuiltinResourcePack(Identifier.of("itatiers", "itatiers-default"), tiers, ResourcePackActivationType.ALWAYS_ENABLED);
-            if (!anonymousUserAgent)
-                userAgent += " " + fabricLoader.get().getMetadata().getVersion().getFriendlyString() + " on " + MinecraftClient.getInstance().getGameVersion();
+
+            version = fabricLoader.get().getMetadata().getVersion().getFriendlyString();
+            userAgent += " " + version + " on " + MinecraftClient.getInstance().getGameVersion();
         });
 
         KeyBinding.Category category = KeyBinding.Category.create(Identifier.of("itatiers"));
-        autoDetectKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Auto Detect Kit", GLFW.GLFW_KEY_Y, category));
-        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle the gamemodes", GLFW.GLFW_KEY_U, category));
-        openClosestPlayerProfile = KeyBindingHelper.registerKeyBinding(new KeyBinding("Open Closest Player Profile", GLFW.GLFW_KEY_H, category));
+        autoDetectKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Auto-detect Kit", GLFW.GLFW_KEY_Y, category));
+        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle gamemodes", GLFW.GLFW_KEY_U, category));
+        openClosestPlayerProfile = KeyBindingHelper.registerKeyBinding(new KeyBinding("Open the closest player's profile", GLFW.GLFW_KEY_H, category));
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new ColorLoader());
         ClientTickEvents.END_CLIENT_TICK.register(ItaTiersClient::tickUtils);
@@ -333,7 +337,7 @@ public class ItaTiersClient implements ClientModInitializer {
         ConfigManager.saveConfig();
     }
 
-    private static PlayerProfile addGetPlayer(String name, boolean priority) {
+    public static PlayerProfile addGetPlayer(String name, boolean priority) {
         for (PlayerProfile profile : playerProfiles) {
             if (profile.name.equalsIgnoreCase(name) || profile.originalName.equalsIgnoreCase(name)) {
                 if (priority)

@@ -1,7 +1,10 @@
 package com.itatiers.profile;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.itatiers.ItaTiersClient;
 import com.itatiers.profile.types.ItaTiersProfile;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -17,12 +20,12 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +45,6 @@ public class PlayerProfile {
     public String originalName;
     public boolean imageSaved = false;
     public int numberOfImageRequests = 0;
-    private int numberOfRequests = 0;
     private final boolean regular;
 
     public PlayerProfile(String name, boolean regular) {
@@ -82,195 +84,99 @@ public class PlayerProfile {
         status = Status.READY;
     }
 
-    public void buildItaTiersRequest() {
-        if (!name.matches("^[a-zA-Z0-9_]{3,16}$") || name.contains(".")) {
-            status = Status.NOT_EXISTING;
+    public static void buildItaTiersRequests(ArrayList<PlayerProfile> playerProfiles) {
+        if (playerProfiles.isEmpty())
             return;
-        }
 
-        if (numberOfRequests > 4) {
-            buildRequest("https://api.mojang.com/users/profiles/minecraft/");
-            return;
-        }
+        JsonObject jsonBodyObject = new JsonObject();
+        JsonArray namesArray = new JsonArray();
 
-        numberOfRequests++;
+        for (PlayerProfile profile : playerProfiles)
+            if (profile.name != null)
+                namesArray.add(profile.name);
+
+        jsonBodyObject.add("names", namesArray);
+        String jsonBody = jsonBodyObject.toString();
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.mctiers.it/api/profile/" + name))
-                    .header("User-Agent", userAgent)
-                    .GET()
+                    .uri(URI.create("https://api.mctiers.it/api/mod/v1/profiles"))
+                    .header("User-Agent", "ItaTiers/" + version)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                     .build();
 
-            HttpClient.newHttpClient()
+            ItaTiersClient.HTTP_CLIENT
                     .sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenAccept(response -> {
                         if (response.statusCode() != 200) {
-                            buildRequest();
+                            for (PlayerProfile playerProfile : playerProfiles)
+                                playerProfile.status = Status.API_ISSUE;
+
                             return;
                         }
 
-                        parseItaTiersJson(response.body());
+                        if (!parseItaTiersProfilesJson(response.body(), playerProfiles))
+                            for (PlayerProfile playerProfile : playerProfiles)
+                                playerProfile.status = Status.API_ISSUE;
                     })
                     .exceptionally(exception -> {
-                        CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS).execute(this::buildRequest);
+                        for (PlayerProfile playerProfile : playerProfiles)
+                            playerProfile.status = Status.API_ISSUE;
+
                         return null;
                     });
         } catch (IllegalArgumentException ignored) {
-            status = Status.NOT_EXISTING;
+            for (PlayerProfile playerProfile : playerProfiles)
+                playerProfile.status = Status.API_ISSUE;
         }
     }
 
-    public void buildRequest() {
-        if (!name.matches("^[a-zA-Z0-9_]{3,16}$") || name.contains(".")) {
-            status = Status.NOT_EXISTING;
-            return;
-        }
-
-        if (numberOfRequests > 4) {
-            buildRequest("https://api.mojang.com/users/profiles/minecraft/");
-            return;
-        }
-
-        numberOfRequests++;
-
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://playerdb.co/api/player/minecraft/" + name))
-                    .header("User-Agent", userAgent)
-                    .GET()
-                    .build();
-
-            HttpClient.newHttpClient()
-                    .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(response -> {
-                        int statusCode = response.statusCode();
-
-                        if (statusCode == 400 || statusCode == 500) {
-                            status = Status.NOT_EXISTING;
-                            return;
-                        } else if (statusCode != 200) {
-                            buildRequest("https://api.mojang.com/users/profiles/minecraft/");
-                            return;
-                        }
-
-                        parseJson(response.body());
-                    })
-                    .exceptionally(exception -> {
-                        CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS).execute(this::buildRequest);
-                        return null;
-                    });
-        } catch (IllegalArgumentException ignored) {
-            status = Status.NOT_EXISTING;
-        }
-    }
-
-    public void buildRequest(String apiUrl) {
-        if (numberOfRequests > 11 || status != Status.SEARCHING) {
-            status = Status.TIMEOUTED;
-            return;
-        }
-
-        numberOfRequests++;
-
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiUrl + name))
-                    .header("User-Agent", userAgent)
-                    .GET()
-                    .build();
-
-            HttpClient.newHttpClient()
-                    .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(response -> {
-                        if (response.body().contains("minecraft/profile/lookup")) {
-                            status = Status.API_ISSUE;
-                            return;
-                        }
-
-                        int statusCode = response.statusCode();
-
-                        if (statusCode == 404 || statusCode == 400) {
-                            status = Status.NOT_EXISTING;
-                            return;
-                        } else if (statusCode == 403) {
-                            CompletableFuture.delayedExecutor(50, TimeUnit.MILLISECONDS).execute(() -> buildRequest("https://api.minecraftservices.com/minecraft/profile/lookup/name/"));
-                            return;
-                        } else if (statusCode != 200) {
-                            long delay = switch (numberOfRequests) {
-                                case 1 -> 50;
-                                case 2, 3 -> 100;
-                                case 4, 5 -> 400;
-                                case 6, 7 -> 900;
-                                default -> 1500;
-                            };
-                            CompletableFuture.delayedExecutor(delay, TimeUnit.MILLISECONDS).execute(() -> buildRequest(apiUrl));
-                            return;
-                        }
-
-                        parseJson(response.body());
-                    })
-                    .exceptionally(exception -> {
-                        CompletableFuture.delayedExecutor(100, TimeUnit.MILLISECONDS).execute(() -> buildRequest(apiUrl));
-                        return null;
-                    });
-        } catch (IllegalArgumentException ignored) {
-            status = Status.NOT_EXISTING;
-        }
-    }
-
-    private void parseItaTiersJson(String json) {
+    private static boolean parseItaTiersProfilesJson(String json, ArrayList<PlayerProfile> playerProfiles) {
         JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+        ArrayList<PlayerProfile> notFound = new ArrayList<>(playerProfiles);
 
-        if (jsonObject.has("username") && jsonObject.has("uuid")) {
+        if (jsonObject.has("profiles") && jsonObject.has("version")) {
+            JsonArray profiles = jsonObject.getAsJsonArray("profiles");
+
+            for (JsonElement profileElement : profiles) {
+                JsonObject profileObj = profileElement.getAsJsonObject();
+
+                if (!profileObj.has("username"))
+                    continue;
+
+                String username = profileObj.get("username").getAsString();
+
+                for (PlayerProfile playerProfile : playerProfiles) {
+                    if (playerProfile != null && username.equalsIgnoreCase(playerProfile.name)) {
+                        playerProfile.parseItaTiersJson(profileObj);
+                        notFound.remove(playerProfile);
+                        break;
+                    }
+                }
+            }
+
+            for (PlayerProfile playerProfile : notFound)
+                playerProfile.status = Status.NOT_EXISTING;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void parseItaTiersJson(JsonObject jsonObject) {
+        if (jsonObject != null && jsonObject.has("username") && jsonObject.has("uuid")) {
             name = jsonObject.get("username").getAsString();
             uuid = jsonObject.get("uuid").getAsString();
         } else {
-            buildRequest();
+            this.status = Status.API_ISSUE;
             return;
         }
 
         if (!regular)
             savePlayerImage();
 
-        profileItaTiers = new ItaTiersProfile(json);
-
-        status = Status.READY;
-    }
-
-    private void parseJson(String json) {
-        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
-
-        if (jsonObject.has("code") && jsonObject.has("data") && jsonObject.has("success")) {
-            if (!jsonObject.get("success").getAsString().contains("true")) {
-                buildRequest("https://api.mojang.com/users/profiles/minecraft/");
-                return;
-            }
-            JsonObject data = jsonObject.getAsJsonObject("data");
-            if (data.has("player")) {
-                JsonObject player = data.getAsJsonObject("player");
-                if (player.has("username") && player.has("raw_id") && player.has("id")) {
-                    name = player.get("username").getAsString();
-                    uuid = player.get("raw_id").getAsString();
-                    uuidObject = UUID.fromString(player.get("id").getAsString());
-                    originalNameText = Text.of(name);
-                }
-            }
-        } else if (jsonObject.has("name") && jsonObject.has("id")) {
-            name = jsonObject.get("name").getAsString();
-            uuid = jsonObject.get("id").getAsString();
-            originalNameText = Text.of(name);
-        }
-
-        if (uuid.isEmpty()) {
-            status = Status.NOT_EXISTING;
-            return;
-        }
-
-        if (!regular)
-            savePlayerImage();
-
-        profileItaTiers = new ItaTiersProfile(name, "https://api.mctiers.it/api/profile/");
+        profileItaTiers = new ItaTiersProfile(jsonObject.toString());
 
         status = Status.READY;
     }

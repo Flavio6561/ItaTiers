@@ -23,8 +23,6 @@ public class ConfigManager {
 
         ItaTiersClient.DisplayStatus positionItaTiers;
         Modes activeItaTiersMode;
-
-        boolean anonymousUserAgent;
     }
 
     public static void loadConfig() {
@@ -57,8 +55,6 @@ public class ConfigManager {
         if (Arrays.stream(Modes.values()).toList().contains(config.activeItaTiersMode))
             ItaTiersClient.activeItaTiersMode = config.activeItaTiersMode;
 
-        ItaTiersClient.anonymousUserAgent = config.anonymousUserAgent;
-
         saveConfig();
     }
 
@@ -77,8 +73,6 @@ public class ConfigManager {
 
         config.positionItaTiers = ItaTiersClient.positionItaTiers;
         config.activeItaTiersMode = ItaTiersClient.activeItaTiersMode;
-
-        config.anonymousUserAgent = ItaTiersClient.anonymousUserAgent;
 
         saveConfig();
     }
@@ -100,8 +94,6 @@ public class ConfigManager {
 
         currentConfig.positionItaTiers = ItaTiersClient.positionItaTiers;
         currentConfig.activeItaTiersMode = ItaTiersClient.activeItaTiersMode;
-
-        currentConfig.anonymousUserAgent = ItaTiersClient.anonymousUserAgent;
 
         try (FileWriter writer = new FileWriter(configFile)) {
             gson.toJson(currentConfig, writer);
