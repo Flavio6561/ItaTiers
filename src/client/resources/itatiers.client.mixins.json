@@ -3,7 +3,8 @@
   "package": "com.itatiers.mixin.client",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "ModifyNameTagsClientMixin"
+    "ModifyNameTagsClientMixin",
+    "ModifyTabClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

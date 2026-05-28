@@ -5,10 +5,7 @@ import com.google.gson.JsonSyntaxException;
 import com.itatiers.ItaTiersClient;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 
@@ -26,8 +23,6 @@ public class ConfigManager {
 
         ItaTiersClient.DisplayStatus positionItaTiers;
         Modes activeItaTiersMode;
-
-        boolean anonymousUserAgent;
     }
 
     public static void loadConfig() {
@@ -60,8 +55,6 @@ public class ConfigManager {
         if (Arrays.stream(Modes.values()).toList().contains(config.activeItaTiersMode))
             ItaTiersClient.activeItaTiersMode = config.activeItaTiersMode;
 
-        ItaTiersClient.anonymousUserAgent = config.anonymousUserAgent;
-
         saveConfig();
     }
 
@@ -80,8 +73,6 @@ public class ConfigManager {
 
         config.positionItaTiers = ItaTiersClient.positionItaTiers;
         config.activeItaTiersMode = ItaTiersClient.activeItaTiersMode;
-
-        config.anonymousUserAgent = ItaTiersClient.anonymousUserAgent;
 
         saveConfig();
     }
@@ -103,8 +94,6 @@ public class ConfigManager {
 
         currentConfig.positionItaTiers = ItaTiersClient.positionItaTiers;
         currentConfig.activeItaTiersMode = ItaTiersClient.activeItaTiersMode;
-
-        currentConfig.anonymousUserAgent = ItaTiersClient.anonymousUserAgent;
 
         try (FileWriter writer = new FileWriter(configFile)) {
             gson.toJson(currentConfig, writer);
