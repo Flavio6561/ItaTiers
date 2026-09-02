@@ -24,8 +24,8 @@ public class ColorLoader implements SimpleSynchronousResourceReloadListener {
 
     @Override
     public void reload(ResourceManager manager) {
-        if (manager.getResource(Identifier.of("minecraft", "colors/colors.json")).isPresent()) {
-            Resource resource = manager.getResource(Identifier.of("minecraft", "colors/colors.json")).get();
+        if (manager.getResource(Identifier.of("minecraft", "colors/ita_colors.json")).isPresent()) {
+            Resource resource = manager.getResource(Identifier.of("minecraft", "colors/ita_colors.json")).get();
             try {
                 JsonObject colorData = JsonHelper.deserialize(new Gson(), new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8), JsonObject.class);
                 ColorControl.updateColors(colorData);
