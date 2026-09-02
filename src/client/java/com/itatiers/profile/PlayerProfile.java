@@ -67,7 +67,7 @@ public class PlayerProfile {
             return;
         }
 
-        final Identifier DEFAULT_IMAGE = Identifier.of("minecraft", "textures/default.png");
+        final Identifier DEFAULT_IMAGE = Identifier.of("minecraft", "textures/ita_default.png");
         Path targetFile = FabricLoader.getInstance().getGameDir().resolve("cache/itatiers/da300ba3690b43228feacf1628825c88.png");
 
         try (InputStream inputStream = MinecraftClient.getInstance().getResourceManager().getResource(DEFAULT_IMAGE).orElseThrow().getInputStream()) {
