@@ -15,7 +15,7 @@ public class ColorControl {
         for (String key : json.keySet())
             colors.put(key, Integer.parseUnsignedInt(json.get(key).getAsString().replace("#", ""), 16));
 
-        Icons.OVERALL = Text.literal("\uF001").setStyle(Style.EMPTY.withColor(getColorMinecraftStandard("points")).withFont(Identifier.of("minecraft", "misc")));
+        Icons.OVERALL = Text.literal("\uF001").setStyle(Style.EMPTY.withColor(getColorMinecraftStandard("points")).withFont(Identifier.of("minecraft", "ita_misc")));
     }
 
     public static int getColor(String name) {
