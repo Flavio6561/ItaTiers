@@ -12,26 +12,27 @@ import com.itatiers.screens.PlayerSearchResultScreen;
 import com.itatiers.textures.ColorControl;
 import com.itatiers.textures.ColorLoader;
 import com.itatiers.textures.Icons;
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
+import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.util.CommonColors;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import org.apache.commons.io.FileUtils;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,7 @@ public class ItaTiersClient implements ClientModInitializer {
     public static String userAgent = "ItaTiers (https://github.com/Flavio6561/ItaTiers)";
     public static String version = "0.0";
     private static final ArrayList<PlayerProfile> playerProfiles = new ArrayList<>();
-    private static final HashMap<String, Text> playerTexts = new HashMap<>();
+    private static final HashMap<String, Component> playerTexts = new HashMap<>();
 
     public static boolean toggleMod = true;
     public static boolean showIcons = true;
@@ -62,9 +63,9 @@ public class ItaTiersClient implements ClientModInitializer {
     public static DisplayStatus positionItaTiers = DisplayStatus.LEFT;
     public static Modes activeItaTiersMode = Modes.VANILLA;
 
-    private static KeyBinding autoDetectKey;
-    public static KeyBinding openClosestPlayerProfile;
-    private static KeyBinding cycleKey;
+    private static KeyMapping autoDetectKey;
+    public static KeyMapping openClosestPlayerProfile;
+    private static KeyMapping cycleKey;
 
     public static HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
@@ -76,25 +77,24 @@ public class ItaTiersClient implements ClientModInitializer {
 
         Optional<ModContainer> fabricLoader = FabricLoader.getInstance().getModContainer("itatiers");
 
-        fabricLoader.ifPresent(tiers -> {
-            ResourceManagerHelper.registerBuiltinResourcePack(Identifier.of("itatiers", "itatiers-default"), tiers, ResourcePackActivationType.ALWAYS_ENABLED);
-
+        fabricLoader.ifPresent(itatiers -> {
+            ResourceLoader.registerBuiltinPack(Identifier.fromNamespaceAndPath("resourcepacks", "itatiers-default"), itatiers, Component.literal("Resources for ItaTiers"), PackActivationType.ALWAYS_ENABLED);
             version = fabricLoader.get().getMetadata().getVersion().getFriendlyString();
-            userAgent += " " + version + " on " + MinecraftClient.getInstance().getGameVersion();
+            userAgent += " " + version + " on " + Minecraft.getInstance().getLaunchedVersion();
         });
 
-        KeyBinding.Category category = KeyBinding.Category.create(Identifier.of("itatiers"));
-        autoDetectKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Auto-detect Kit", GLFW.GLFW_KEY_Y, category));
-        cycleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding("Cycle gamemodes", GLFW.GLFW_KEY_U, category));
-        openClosestPlayerProfile = KeyBindingHelper.registerKeyBinding(new KeyBinding("Open the closest player's profile", GLFW.GLFW_KEY_H, category));
+        KeyMapping.Category category = KeyMapping.Category.register(Identifier.parse("itatiers"));
+        autoDetectKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("Auto-detect Kit", InputConstants.KEY_Y, category));
+        cycleKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("Cycle gamemodes", InputConstants.KEY_U, category));
+        openClosestPlayerProfile = KeyMappingHelper.registerKeyMapping(new KeyMapping("Open the closest player's profile", InputConstants.KEY_H, category));
 
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new ColorLoader());
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(Identifier.parse("itatiers"), new ColorLoader());
         ClientTickEvents.END_CLIENT_TICK.register(ItaTiersClient::tickUtils);
 
         LOGGER.info("ItaTiers initialized | User agent: {}", userAgent);
     }
 
-    public static Text getModifiedNametag(String originalName, Text originalNameText) {
+    public static Component getModifiedNametag(String originalName, Component originalNameText) {
         PlayerProfile profile = addGetPlayer(originalName, false);
         if (profile.status == Status.READY)
             if (profile.originalNameText == null || profile.originalNameText != originalNameText)
@@ -105,23 +105,23 @@ public class ItaTiersClient implements ClientModInitializer {
         return originalNameText;
     }
 
-    public static Text getNametag(PlayerProfile profile) {
+    public static Component getNametag(PlayerProfile profile) {
         if (!toggleMod || profile.status != Status.READY) return profile.originalNameText;
 
-        Text rightText = Text.literal("");
-        Text leftText = Text.literal("");
-        Text nameText = Text.of(profile.name);
+        Component rightText = Component.literal("");
+        Component leftText = Component.literal("");
+        Component nameText = Component.literal(profile.name);
 
         if (positionItaTiers == DisplayStatus.RIGHT)
             rightText = updateProfileNameTagRight(profile.profileItaTiers, activeItaTiersMode);
         else if (positionItaTiers == DisplayStatus.LEFT)
             leftText = updateProfileNameTagLeft(profile.profileItaTiers, activeItaTiersMode);
 
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (!(client.world == null || client.getNetworkHandler() == null) && profile.uuidObject != null && client.getNetworkHandler().getPlayerUuids().contains(profile.uuidObject))
+        Minecraft client = Minecraft.getInstance();
+        if (!(client.level == null || client.getConnection() == null) && profile.uuidObject != null && client.getConnection().getOnlinePlayerIds().contains(profile.uuidObject))
             nameText = profile.originalNameText;
 
-        return Text.literal("")
+        return Component.literal("")
                 .append(leftText)
                 .append(nameText)
                 .append(rightText);
@@ -137,16 +137,16 @@ public class ItaTiersClient implements ClientModInitializer {
         updatePlayerNametag(ConfigScreen.defaultProfile.originalNameText, ConfigScreen.defaultProfile);
     }
 
-    private static void updatePlayerNametag(Text originalNameText, PlayerProfile profile) {
-        Text rightText = Text.literal("");
-        Text leftText = Text.literal("");
+    private static void updatePlayerNametag(Component originalNameText, PlayerProfile profile) {
+        Component rightText = Component.literal("");
+        Component leftText = Component.literal("");
 
         if (positionItaTiers == DisplayStatus.RIGHT)
             rightText = updateProfileNameTagRight(profile.profileItaTiers, activeItaTiersMode);
         else if (positionItaTiers == DisplayStatus.LEFT)
             leftText = updateProfileNameTagLeft(profile.profileItaTiers, activeItaTiersMode);
 
-        playerTexts.put(profile.name, Text.literal("")
+        playerTexts.put(profile.name, Component.literal("")
                 .append(leftText)
                 .append(originalNameText)
                 .append(rightText));
@@ -154,8 +154,8 @@ public class ItaTiersClient implements ClientModInitializer {
         profile.originalNameText = originalNameText;
     }
 
-    private static Text updateProfileNameTagRight(SuperProfile profile, Modes activeMode) {
-        MutableText returnValue = Text.literal("");
+    private static Component updateProfileNameTagRight(SuperProfile profile, Modes activeMode) {
+        MutableComponent returnValue = Component.literal("");
         if (profile.status == Status.READY) {
             GameMode shown = profile.getGameMode(activeMode);
 
@@ -171,7 +171,7 @@ public class ItaTiersClient implements ClientModInitializer {
             if (shown == null || shown.status != Status.READY)
                 return returnValue;
 
-            MutableText separator = Text.literal(" | ").setStyle(isSeparatorAdaptive ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
+            MutableComponent separator = Component.literal(" | ").setStyle(isSeparatorAdaptive ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
 
             returnValue.append(separator);
 
@@ -184,7 +184,7 @@ public class ItaTiersClient implements ClientModInitializer {
                 returnValue.append(" ").append(Icons.IT_FLAG);
 
             if (showIcons)
-                returnValue.append(Text.literal(" ").append(shown.name.iconTag));
+                returnValue.append(Component.literal(" ").append(shown.name.iconTag));
 
             if (showFlag && flagPosition == 0)
                 returnValue.append(" ").append(Icons.IT_FLAG);
@@ -192,8 +192,8 @@ public class ItaTiersClient implements ClientModInitializer {
         return returnValue;
     }
 
-    private static Text updateProfileNameTagLeft(SuperProfile profile, Modes activeMode) {
-        MutableText returnValue = Text.literal("");
+    private static Component updateProfileNameTagLeft(SuperProfile profile, Modes activeMode) {
+        MutableComponent returnValue = Component.literal("");
         if (profile.status == Status.READY) {
             GameMode shown = profile.getGameMode(activeMode);
 
@@ -209,7 +209,7 @@ public class ItaTiersClient implements ClientModInitializer {
             if (shown == null || shown.status != Status.READY)
                 return returnValue;
 
-            MutableText separator = Text.literal(" | ").setStyle(isSeparatorAdaptive ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
+            MutableComponent separator = Component.literal(" | ").setStyle(isSeparatorAdaptive ? shown.displayedTier.getStyle() : Style.EMPTY.withColor(ColorControl.getColor("static_separator")));
 
             if (showFlag && flagPosition == 0)
                 returnValue.append(Icons.IT_FLAG).append(" ");
@@ -239,12 +239,12 @@ public class ItaTiersClient implements ClientModInitializer {
         }
     }
 
-    private static void tickUtils(MinecraftClient client) {
-        if (!client.isFinishedLoading()) return;
+    private static void tickUtils(Minecraft client) {
+        if (!client.isGameLoadFinished()) return;
 
         if (ConfigScreen.defaultProfile == null) {
             ConfigScreen.ownProfile = new PlayerProfile(client.getGameProfile().name(), false);
-            PlayerProfileQueue.enqueue(ConfigScreen.ownProfile);
+            PlayerProfileQueue.putFirstInQueue(ConfigScreen.ownProfile);
 
             ConfigScreen.defaultProfile = new PlayerProfile("""
                     {
@@ -270,59 +270,72 @@ public class ItaTiersClient implements ClientModInitializer {
                     }""");
         }
 
-        if (autoDetectKey.wasPressed())
+        if (autoDetectKey.consumeClick())
             InventoryChecker.checkInventory(client);
 
-        if (cycleKey.wasPressed()) {
-            Text message = cycleModes();
+        if (cycleKey.consumeClick()) {
+            Component message = cycleModes();
 
             sendMessageToPlayer(message, true);
         }
 
-        if (openClosestPlayerProfile.wasPressed()) {
+        if (openClosestPlayerProfile.consumeClick()) {
             String nearestPlayerName = getNearestPlayerName();
             if (nearestPlayerName != null)
                 searchPlayer(nearestPlayerName);
             else
-                sendMessageToPlayer(Text.literal("No players in render distance").setStyle(Style.EMPTY.withColor(Colors.RED)), true);
+                sendMessageToPlayer(Component.literal("No players in render distance").setStyle(Style.EMPTY.withColor(CommonColors.RED)), true);
         }
     }
 
     public static String getNearestPlayerName() {
-        MinecraftClient minecraftClient = MinecraftClient.getInstance();
-        PlayerEntity self = minecraftClient.player;
-        if (self == null || self.getEntityWorld() == null)
+        Minecraft minecraft = Minecraft.getInstance();
+        Player self = minecraft.player;
+        if (self == null)
             return null;
 
-        PlayerEntity playerEntity = self.getEntityWorld().getPlayers().stream()
-                .filter(player -> player != self)
-                .filter(player -> self.distanceTo(player) < MinecraftClient.getInstance().gameRenderer.getViewDistanceBlocks())
-                .min(Comparator.comparingDouble(self::distanceTo))
-                .orElse(null);
+        try (Level level = self.level()) {
+            Player playerEntity = level.players().stream()
+                    .filter(player -> player != self)
+                    .filter(player -> self.distanceTo(player) < Minecraft.getInstance().options.renderDistance().get() * 16)
+                    .min(Comparator.comparingDouble(self::distanceTo))
+                    .orElse(null);
 
-        if (playerEntity != null)
-            return playerEntity.getNameForScoreboard();
+            if (playerEntity != null)
+                return playerEntity.getScoreboardName();
+        } catch (IOException ignored) {
+
+        }
+
         return null;
     }
 
-    public static Text cycleModes() {
-        return Text.literal("ItaTiers is now displaying ").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))).append(cycleItaTiersMode());
+    public static Component cycleModes() {
+        return Component.literal("ItaTiers is now displaying ").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))).append(cycleItaTiersMode());
     }
 
-    public static Text getActiveIcon() {
+    public static Component getActiveIcon() {
         return activeItaTiersMode.icon;
     }
 
     public static void sendMessageToPlayer(String message, int color, boolean overlay) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null)
-            client.player.sendMessage((Text.literal(message).setStyle(Style.EMPTY.withColor(color))), overlay);
+        Minecraft client = Minecraft.getInstance();
+        if (client.player != null) {
+            if (overlay)
+                client.player.sendOverlayMessage(Component.literal(message).setStyle(Style.EMPTY.withColor(color)));
+            else
+                client.player.sendSystemMessage(Component.literal(message).setStyle(Style.EMPTY.withColor(color)));
+        }
     }
 
-    public static void sendMessageToPlayer(Text message, boolean overlay) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player != null)
-            client.player.sendMessage(message, overlay);
+    public static void sendMessageToPlayer(Component message, boolean overlay) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player != null) {
+            if (overlay)
+                client.player.sendOverlayMessage(message);
+            else
+                client.player.sendSystemMessage(message);
+        }
     }
 
     public static int toggleMod(CommandContext<FabricClientCommandSource> ignoredFabricClientCommandSourceCommandContext) {
@@ -357,11 +370,11 @@ public class ItaTiersClient implements ClientModInitializer {
     }
 
     private static void openPlayerSearchResultScreen(PlayerProfile profile) {
-        MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().setScreen(new PlayerSearchResultScreen(profile)));
+        Minecraft.getInstance().execute(() -> Minecraft.getInstance().setScreenAndShow(new PlayerSearchResultScreen(profile)));
     }
 
     private static void openConfigScreen() {
-        MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().setScreen(ConfigScreen.getConfigScreen(null)));
+        Minecraft.getInstance().execute(() -> Minecraft.getInstance().setScreenAndShow(ConfigScreen.getConfigScreen(null)));
     }
 
     public static int searchPlayer(String name) {
@@ -407,7 +420,7 @@ public class ItaTiersClient implements ClientModInitializer {
         ConfigManager.saveConfig();
     }
 
-    public static Text cycleItaTiersMode() {
+    public static Component cycleItaTiersMode() {
         activeItaTiersMode = cycleEnum(activeItaTiersMode, Modes.getValues());
         updateAllTags();
         ConfigManager.saveConfig();

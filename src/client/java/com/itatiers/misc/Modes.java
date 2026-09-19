@@ -2,8 +2,8 @@ package com.itatiers.misc;
 
 import com.itatiers.textures.ColorControl;
 import com.itatiers.textures.Icons;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,23 +18,23 @@ public enum Modes {
     POT(Icons.POT, Icons.POT_TAG, "diapot", "Diamond Pot"),
     AXE(Icons.AXE, Icons.AXE_TAG, "axe", "Axe");
 
-    public final Text icon;
-    public final Text iconTag;
+    public final Component icon;
+    public final Component iconTag;
     private final String color;
     private final String stringLabel;
-    public Text label;
+    public Component label;
 
-    Modes(Text icon, Text iconTag, String color, String label) {
+    Modes(Component icon, Component iconTag, String color, String label) {
         this.icon = icon;
         this.iconTag = iconTag;
         this.color = color;
         this.stringLabel = label;
-        this.label = Text.literal(label).setStyle(Style.EMPTY.withColor(ColorControl.getColor(color)));
+        this.label = Component.literal(label).setStyle(Style.EMPTY.withColor(ColorControl.getColor(color)));
     }
 
     public static void updateColors() {
         for (Modes mode : values())
-            mode.label = Text.literal(mode.stringLabel).setStyle(Style.EMPTY.withColor(ColorControl.getColor(mode.color)));
+            mode.label = Component.literal(mode.stringLabel).setStyle(Style.EMPTY.withColor(ColorControl.getColor(mode.color)));
     }
 
     public static Modes[] getValues() {

@@ -6,8 +6,8 @@ import com.itatiers.misc.Modes;
 import com.itatiers.profile.GameMode;
 import com.itatiers.profile.Status;
 import com.itatiers.textures.ColorControl;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -19,8 +19,8 @@ public class SuperProfile {
     public int points;
     public int overall;
 
-    public Text displayedPoints;
-    public Text pointsTooltip;
+    public Component displayedPoints;
+    public Component pointsTooltip;
 
     public final ArrayList<GameMode> gameModes = new ArrayList<>();
 
@@ -84,17 +84,17 @@ public class SuperProfile {
         return highest;
     }
 
-    private Text getPointsText() {
-        if (points >= 200) return Text.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("master")));
-        else if (points >= 100) return Text.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("ace")));
-        else if (points >= 50) return Text.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("specialist")));
-        else if (points >= 20) return Text.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("cadet")));
-        else if (points >= 10) return Text.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("novice")));
+    private Component getPointsText() {
+        if (points >= 200) return Component.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("master")));
+        else if (points >= 100) return Component.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("ace")));
+        else if (points >= 50) return Component.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("specialist")));
+        else if (points >= 20) return Component.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("cadet")));
+        else if (points >= 10) return Component.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("novice")));
 
-        return Text.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("rookie")));
+        return Component.literal(String.valueOf(points)).setStyle(Style.EMPTY.withColor(ColorControl.getColor("rookie")));
     }
 
-    private Text getPointsTooltip() {
+    private Component getPointsTooltip() {
         String overallTooltip = "Combat ";
 
         if (points >= 200) overallTooltip += "Master";
@@ -106,6 +106,6 @@ public class SuperProfile {
 
         overallTooltip += "\nOverall: #" + overall;
 
-        return Text.literal(overallTooltip).setStyle(displayedPoints.getStyle());
+        return Component.literal(overallTooltip).setStyle(displayedPoints.getStyle());
     }
 }

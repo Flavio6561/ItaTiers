@@ -1,9 +1,9 @@
 {
   "pack": {
     "pack_format": 29,
-    "description": "Icons and colors for Tiers",
-    "supported_formats": [29, 75],
+    "description": "Icons and colors for ItaTiers",
+    "supported_formats": [29, 97],
     "min_format": 29,
-    "max_format": 75
+    "max_format": 97
   }
 }

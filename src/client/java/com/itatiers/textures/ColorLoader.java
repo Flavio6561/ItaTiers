@@ -3,37 +3,37 @@ package com.itatiers.textures;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.itatiers.misc.Modes;
-import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.util.GsonHelper;
+import org.jspecify.annotations.NonNull;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
-import static com.itatiers.ItaTiersClient.restyleAllTexts;
 import static com.itatiers.ItaTiersClient.LOGGER;
+import static com.itatiers.ItaTiersClient.restyleAllTexts;
 
-public class ColorLoader implements SimpleSynchronousResourceReloadListener {
-    @Override
-    public Identifier getFabricId() {
-        return Identifier.of("itatiers", "color_loader");
-    }
+public class ColorLoader implements PreparableReloadListener {
+    public static Identifier identifier = Identifier.fromNamespaceAndPath("minecraft", "colors/ita_colors.json");
 
     @Override
-    public void reload(ResourceManager manager) {
-        if (manager.getResource(Identifier.of("minecraft", "colors/ita_colors.json")).isPresent()) {
-            Resource resource = manager.getResource(Identifier.of("minecraft", "colors/ita_colors.json")).get();
+    public @NonNull CompletableFuture<Void> reload(SharedState currentReload, @NonNull Executor taskExecutor, @NonNull PreparationBarrier preparationBarrier, @NonNull Executor reloadExecutor) {
+        if (currentReload.resourceManager().getResource(identifier).isPresent()) {
             try {
-                JsonObject colorData = JsonHelper.deserialize(new Gson(), new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8), JsonObject.class);
-                ColorControl.updateColors(colorData);
+                ColorControl.updateColors(GsonHelper.fromJson(new Gson(), new InputStreamReader(currentReload.resourceManager().getResource(identifier).get().open(), StandardCharsets.UTF_8), JsonObject.class));
                 Modes.updateColors();
                 restyleAllTexts();
             } catch (IOException ignored) {
                 LOGGER.warn("Error loading colors info");
             }
         }
+
+        return CompletableFuture.runAsync(() -> {
+        }, taskExecutor).thenCompose(preparationBarrier::wait).thenRunAsync(() -> {
+        }, reloadExecutor);
     }
 }

@@ -7,25 +7,27 @@ import com.itatiers.profile.Status;
 import com.itatiers.profile.types.SuperProfile;
 import com.itatiers.textures.ColorControl;
 import com.itatiers.textures.Icons;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ConfirmLinkScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextWidget;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 
 import static com.itatiers.ItaTiersClient.sendMessageToPlayer;
 
@@ -37,22 +39,22 @@ public class PlayerSearchResultScreen extends Screen {
     private boolean imageReady = false;
 
     public PlayerSearchResultScreen(PlayerProfile playerProfile) {
-        super(Text.literal(playerProfile.name));
+        super(Component.literal(playerProfile.name));
         this.playerProfile = playerProfile;
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (playerProfile.status == Status.NOT_EXISTING) {
-            this.close();
+            onClose();
             sendMessageToPlayer(playerProfile.name + " was not found in the tierlist", ColorControl.getColor("red"), false);
             return;
         } else if (playerProfile.status == Status.TIMEOUTED) {
-            this.close();
+            onClose();
             sendMessageToPlayer(playerProfile.name + "'s search was timeouted. Clear cache and retry", ColorControl.getColor("red"), false);
             return;
         } else if (playerProfile.status == Status.API_ISSUE) {
-            this.close();
+            onClose();
             sendMessageToPlayer(playerProfile.name + "'s search failed. mctiers.it might be down, try again later", ColorControl.getColor("red"), false);
             return;
         }
@@ -62,10 +64,10 @@ public class PlayerSearchResultScreen extends Screen {
         separator = height / 23;
         int avatarY = height / 55 + 14;
 
-        super.render(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         if (playerProfile.status == Status.SEARCHING) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Searching for " + playerProfile.name + "..."), centerX, listY, ColorControl.getColorMinecraftStandard("green"));
+            context.centeredText(font, Component.literal("Searching for " + playerProfile.name + "..."), centerX, listY, ColorControl.getColorMinecraftStandard("green"));
             return;
         }
 
@@ -73,45 +75,45 @@ public class PlayerSearchResultScreen extends Screen {
             playerProfile.savePlayerImage();
 
         drawPlayerAvatar(context, centerX, avatarY);
-        context.drawCenteredTextWithShadow(this.textRenderer, ItaTiersClient.getNametag(playerProfile), centerX, height / 55, ColorControl.getColorMinecraftStandard("text"));
+        context.centeredText(font, ItaTiersClient.getNametag(playerProfile), centerX, height / 55, ColorControl.getColorMinecraftStandard("text"));
 
         drawCategoryList(context, playerProfile.profileItaTiers, centerX, listY);
     }
 
-    private void drawCategoryList(DrawContext context, SuperProfile profile, int x, int y) {
+    private void drawCategoryList(GuiGraphicsExtractor context, SuperProfile profile, int x, int y) {
         if (profile == null) {
-            context.drawCenteredTextWithShadow(this.textRenderer, "Loading from API...", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("green"));
+            context.centeredText(font, "Loading from API...", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("green"));
             return;
         }
 
         if (profile.status == Status.SEARCHING) {
-            context.drawCenteredTextWithShadow(this.textRenderer, "Searching...", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("green"));
+            context.centeredText(font, "Searching...", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("green"));
             return;
         } else if (profile.status == Status.NOT_EXISTING) {
-            context.drawCenteredTextWithShadow(this.textRenderer, "Unranked", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("red"));
+            context.centeredText(font, "Unranked", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("red"));
             return;
         } else if (profile.status == Status.TIMEOUTED) {
-            context.drawCenteredTextWithShadow(this.textRenderer, "Search timeouted. Clear cache and retry", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("red"));
+            context.centeredText(font, "Search timeouted. Clear cache and retry", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("red"));
             return;
         } else if (profile.status == Status.API_ISSUE) {
-            context.drawCenteredTextWithShadow(this.textRenderer, "Search failed. This is likely an API issue", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("red"));
-            context.drawCenteredTextWithShadow(this.textRenderer, "Contact flavio6561 on Discord for support", x, (int) (y + 2.8 * separator + 15), ColorControl.getColorMinecraftStandard("red"));
+            context.centeredText(font, "Search failed. This is likely an API issue", x, (int) (y + 2.8 * separator), ColorControl.getColorMinecraftStandard("red"));
+            context.centeredText(font, "Contact flavio6561 on Discord for support", x, (int) (y + 2.8 * separator + 15), ColorControl.getColorMinecraftStandard("red"));
             return;
         }
 
         if (!profile.drawn) {
-            TextWidget overallLabel = new TextWidget(Text.literal("Points").setStyle(Style.EMPTY.withColor(ColorControl.getColor("points"))), this.textRenderer);
+            StringWidget overallLabel = new StringWidget(Component.literal("Points").setStyle(Style.EMPTY.withColor(ColorControl.getColor("points"))), font);
             overallLabel.setPosition(x - 42, (int) (y + 2.4 * separator));
-            this.addDrawableChild(overallLabel);
+            this.addRenderableWidget(overallLabel);
 
-            TextWidget overallIcon = new TextWidget(Icons.OVERALL, this.textRenderer);
+            StringWidget overallIcon = new StringWidget(Icons.OVERALL, font);
             overallIcon.setPosition(x - 62, (int) (y + 2.4 * separator + 2));
-            this.addDrawableChild(overallIcon);
+            this.addRenderableWidget(overallIcon);
 
-            TextWidget overall = new TextWidget(profile.displayedPoints, this.textRenderer);
+            StringWidget overall = new StringWidget(profile.displayedPoints, font);
             overall.setPosition(x + 45 - (profile.displayedPoints.getString().length() - 2) * 3, (int) (y + 2.4 * separator));
-            overall.setTooltip(Tooltip.of(profile.pointsTooltip));
-            this.addDrawableChild(overall);
+            overall.setTooltip(Tooltip.create(profile.pointsTooltip));
+            this.addRenderableWidget(overall);
 
             drawTierList(profile, x - 62, (int) (y + 2.4 * separator) + 30);
 
@@ -128,33 +130,33 @@ public class PlayerSearchResultScreen extends Screen {
         if (mode.drawn || mode.status != Status.READY)
             return false;
 
-        TextWidget icon = new TextWidget(mode.name.icon, this.textRenderer);
+        StringWidget icon = new StringWidget(mode.name.icon, font);
         icon.setPosition(x, y + 3);
-        addDrawableChild(icon);
+        addRenderableWidget(icon);
 
-        TextWidget label = new TextWidget(mode.name.label, this.textRenderer);
+        StringWidget label = new StringWidget(mode.name.label, font);
         label.setPosition(x + 20, y);
-        addDrawableChild(label);
+        addRenderableWidget(label);
 
-        TextWidget tier = new TextWidget(mode.displayedTier, this.textRenderer);
+        StringWidget tier = new StringWidget(mode.displayedTier, font);
         tier.setPosition(x + 105 - (mode.displayedTier.getString().length() - 3) * 3, y);
-        tier.setTooltip(Tooltip.of(mode.tierTooltip));
-        addDrawableChild(tier);
+        tier.setTooltip(Tooltip.create(mode.tierTooltip));
+        addRenderableWidget(tier);
 
         mode.drawn = true;
 
         return true;
     }
 
-    private void drawPlayerAvatar(DrawContext context, int x, int y) {
+    private void drawPlayerAvatar(GuiGraphicsExtractor context, int x, int y) {
         if (playerAvatarTexture != null && imageReady)
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, playerAvatarTexture, x - width / 32, y, 0, 0, width / 16, (int) (width / 6.666), width / 16, (int) (width / 6.666));
+            context.blit(RenderPipelines.GUI_TEXTURED, playerAvatarTexture, x - width / 32, y, 0, 0, width / 16, (int) (width / 6.666), width / 16, (int) (width / 6.666));
         else if (playerProfile.imageSaved)
             loadPlayerAvatar();
         else if (playerProfile.numberOfImageRequests == 5)
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(playerProfile.name + "'s skin failed to load. Clear cache and retry"), x, y + 50, ColorControl.getColorMinecraftStandard("red"));
+            context.centeredText(font, Component.literal(playerProfile.name + "'s skin failed to load. Clear cache and retry"), x, y + 50, ColorControl.getColorMinecraftStandard("red"));
         else
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Loading " + playerProfile.name + "'s skin"), x, y + 50, ColorControl.getColorMinecraftStandard("green"));
+            context.centeredText(font, Component.literal("Loading " + playerProfile.name + "'s skin"), x, y + 50, ColorControl.getColorMinecraftStandard("green"));
     }
 
     private void loadPlayerAvatar() {
@@ -163,8 +165,8 @@ public class PlayerSearchResultScreen extends Screen {
             return;
 
         try (FileInputStream stream = new FileInputStream(avatarFile)) {
-            playerAvatarTexture = Identifier.of("players", playerProfile.uuid);
-            MinecraftClient.getInstance().getTextureManager().registerTexture(playerAvatarTexture, new NativeImageBackedTexture(null, NativeImage.read(stream)));
+            playerAvatarTexture = Identifier.fromNamespaceAndPath("players", playerProfile.uuid);
+            Minecraft.getInstance().getTextureManager().register(playerAvatarTexture, new DynamicTexture(String::new, NativeImage.read(stream)));
             imageReady = true;
         } catch (IOException ignored) {
         }
@@ -174,13 +176,6 @@ public class PlayerSearchResultScreen extends Screen {
     protected void init() {
         playerProfile.resetDrawnStatus();
 
-        addDrawableChild(ButtonWidget.builder(Icons.NAMEMC, (ignored) -> {
-            MinecraftClient minecraftClient = MinecraftClient.getInstance();
-            minecraftClient.setScreen(new ConfirmLinkScreen((confirmed) -> {
-                if (confirmed)
-                    Util.getOperatingSystem().open("https://namemc.com/profile/" + playerProfile.uuid);
-                minecraftClient.setScreen(this);
-            }, "https://namemc.com/profile/" + playerProfile.uuid, true));
-        }).dimensions(width - 20 - 5, height - 20 - 5, 20, 20).tooltip(Tooltip.of(Text.literal("Open " + playerProfile.name + "'s NameMC page"))).build());
+        addRenderableWidget(Button.builder(Icons.NAMEMC, (_) -> ConfirmLinkScreen.confirmLinkNow(Minecraft.getInstance().gui.screen(), URI.create("https://namemc.com/profile/" + playerProfile.uuid), true)).bounds(width - 20 - 5, height - 20 - 5, 20, 20).tooltip(Tooltip.create(Component.literal("Open " + playerProfile.name + "'s NameMC page"))).build());
     }
 }

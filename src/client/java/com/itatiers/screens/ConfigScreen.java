@@ -1,22 +1,23 @@
 package com.itatiers.screens;
 
 import com.itatiers.ItaTiersClient;
+import com.itatiers.profile.PlayerProfile;
 import com.itatiers.profile.Status;
 import com.itatiers.textures.ColorControl;
 import com.itatiers.textures.Icons;
-import com.itatiers.profile.PlayerProfile;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,37 +32,37 @@ public class ConfigScreen extends Screen {
     private Identifier playerAvatarTexture;
     private boolean imageReady = false;
 
-    private ButtonWidget toggleModWidget;
-    private ButtonWidget toggleShowIcons;
-    private ButtonWidget toggleSeparatorMode;
-    private ButtonWidget cycleDisplayMode;
-    private ButtonWidget clearPlayerCache;
-    private ButtonWidget enableOwnProfile;
-    private ButtonWidget positionItaTiers;
-    public ButtonWidget toggleFlag;
-    public ButtonWidget cycleFlagPosition;
+    private Button toggleModWidget;
+    private Button toggleShowIcons;
+    private Button toggleSeparatorMode;
+    private Button cycleDisplayMode;
+    private Button clearPlayerCache;
+    private Button enableOwnProfile;
+    private Button positionItaTiers;
+    public Button toggleFlag;
+    public Button cycleFlagPosition;
 
-    private ButtonWidget activeMode;
+    private Button activeMode;
 
     private int distance;
 
     private ConfigScreen() {
-        super(Text.literal("ItaTiers config"));
+        super(Component.literal("ItaTiers config"));
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         int centerX = width / 2;
         distance = height / 14;
 
-        super.render(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("ItaTiers config"), centerX, height / 50, ColorControl.getColorMinecraftStandard("text"));
+        context.centeredText(font, Component.literal("ItaTiers config"), centerX, height / 50, ColorControl.getColorMinecraftStandard("text"));
 
         drawPlayerAvatar(context, centerX, height - 10 - (int) (width / 6.666));
-        context.drawCenteredTextWithShadow(this.textRenderer, ItaTiersClient.getNametag(useOwnProfile ? ownProfile : defaultProfile), centerX, height - 24 - (int) (width / 6.666), ColorControl.getColorMinecraftStandard("text"));
+        context.centeredText(font, ItaTiersClient.getNametag(useOwnProfile ? ownProfile : defaultProfile), centerX, height - 24 - (int) (width / 6.666), ColorControl.getColorMinecraftStandard("text"));
 
-        context.drawTextWithShadow(this.textRenderer, Text.of(ItaTiersClient.getActiveIcon()), centerX + 62, distance + 75 + 9, ColorControl.getColorMinecraftStandard("text"));
+        context.text(font, ItaTiersClient.getActiveIcon(), centerX + 62, distance + 75 + 9, ColorControl.getColorMinecraftStandard("text"));
 
         checkUpdates();
     }
@@ -82,101 +83,101 @@ public class ConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        toggleModWidget = ButtonWidget.builder(Text.literal(ItaTiersClient.toggleMod ? "Disable ItaTiers" : "Enable ItaTiers").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (buttonWidget) -> {
+        toggleModWidget = Button.builder(Component.literal(ItaTiersClient.toggleMod ? "Disable ItaTiers" : "Enable ItaTiers").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (Button) -> {
             ItaTiersClient.toggleMod();
-            buttonWidget.setMessage(Text.literal(ItaTiersClient.toggleMod ? "Disable ItaTiers" : "Enable ItaTiers").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
-            toggleModWidget.setTooltip(Tooltip.of(Text.of(ItaTiersClient.toggleMod ? "Disable the mod" : "Enable the mod")));
-        }).dimensions(width / 2 - 88 - 2, distance, 88, 20).build();
-        toggleModWidget.setTooltip(Tooltip.of(Text.of(ItaTiersClient.toggleMod ? "Disable the mod" : "Enable the mod")));
+            Button.setMessage(Component.literal(ItaTiersClient.toggleMod ? "Disable ItaTiers" : "Enable ItaTiers").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
+            toggleModWidget.setTooltip(Tooltip.create(Component.literal(ItaTiersClient.toggleMod ? "Disable the mod" : "Enable the mod")));
+        }).bounds(width / 2 - 88 - 2, distance, 88, 20).build();
+        toggleModWidget.setTooltip(Tooltip.create(Component.literal(ItaTiersClient.toggleMod ? "Disable the mod" : "Enable the mod")));
 
-        toggleShowIcons = ButtonWidget.builder(Text.literal(ItaTiersClient.showIcons ? "Disable Icons" : "Enable Icons").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (buttonWidget) -> {
+        toggleShowIcons = Button.builder(Component.literal(ItaTiersClient.showIcons ? "Disable Icons" : "Enable Icons").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (Button) -> {
             ItaTiersClient.toggleShowIcons();
-            buttonWidget.setMessage(Text.literal(ItaTiersClient.showIcons ? "Disable Icons" : "Enable Icons").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
-            toggleShowIcons.setTooltip(Tooltip.of(Text.of(ItaTiersClient.showIcons ? "Disable the gamemode icon next to the tier" : "Enable the gamemode icon next to the tier")));
-        }).dimensions(width / 2 + 2, distance, 88, 20).build();
-        toggleShowIcons.setTooltip(Tooltip.of(Text.of(ItaTiersClient.showIcons ? "Disable the gamemode icon next to the tier" : "Enable the gamemode icon next to the tier")));
+            Button.setMessage(Component.literal(ItaTiersClient.showIcons ? "Disable Icons" : "Enable Icons").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
+            toggleShowIcons.setTooltip(Tooltip.create(Component.literal(ItaTiersClient.showIcons ? "Disable the gamemode icon next to the tier" : "Enable the gamemode icon next to the tier")));
+        }).bounds(width / 2 + 2, distance, 88, 20).build();
+        toggleShowIcons.setTooltip(Tooltip.create(Component.literal(ItaTiersClient.showIcons ? "Disable the gamemode icon next to the tier" : "Enable the gamemode icon next to the tier")));
 
-        toggleSeparatorMode = ButtonWidget.builder(Text.literal(ItaTiersClient.isSeparatorAdaptive ? "Disable Dynamic Separator" : "Enable Dynamic Separator").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (buttonWidget) -> {
+        toggleSeparatorMode = Button.builder(Component.literal(ItaTiersClient.isSeparatorAdaptive ? "Disable Dynamic Separator" : "Enable Dynamic Separator").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (Button) -> {
             ItaTiersClient.toggleSeparatorAdaptive();
-            buttonWidget.setMessage(Text.literal(ItaTiersClient.isSeparatorAdaptive ? "Disable Dynamic Separator" : "Enable Dynamic Separator").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
-            toggleSeparatorMode.setTooltip(Tooltip.of(Text.of(ItaTiersClient.isSeparatorAdaptive ? "Make the Tiers separator gray" : "Make the Tiers separator match the tier color")));
-        }).dimensions(width / 2 - 90, distance + 25, 180, 20).build();
-        toggleSeparatorMode.setTooltip(Tooltip.of(Text.of(ItaTiersClient.isSeparatorAdaptive ? "Make the Tiers separator gray" : "Make the Tiers separator match the tier color")));
+            Button.setMessage(Component.literal(ItaTiersClient.isSeparatorAdaptive ? "Disable Dynamic Separator" : "Enable Dynamic Separator").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
+            toggleSeparatorMode.setTooltip(Tooltip.create(Component.literal(ItaTiersClient.isSeparatorAdaptive ? "Make the Tiers separator gray" : "Make the Tiers separator match the tier color")));
+        }).bounds(width / 2 - 90, distance + 25, 180, 20).build();
+        toggleSeparatorMode.setTooltip(Tooltip.create(Component.literal(ItaTiersClient.isSeparatorAdaptive ? "Make the Tiers separator gray" : "Make the Tiers separator match the tier color")));
 
-        cycleDisplayMode = ButtonWidget.builder(Text.literal(ItaTiersClient.displayMode.getCurrentMode()).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (buttonWidget) -> {
+        cycleDisplayMode = Button.builder(Component.literal(ItaTiersClient.displayMode.getCurrentMode()).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (Button) -> {
             ItaTiersClient.cycleDisplayMode();
-            buttonWidget.setMessage(Text.literal(ItaTiersClient.displayMode.getCurrentMode()).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
-        }).dimensions(width / 2 - 90, distance + 50, 180, 20).build();
-        cycleDisplayMode.setTooltip(Tooltip.of(Text.of("""
+            Button.setMessage(Component.literal(ItaTiersClient.displayMode.getCurrentMode()).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
+        }).bounds(width / 2 - 90, distance + 50, 180, 20).build();
+        cycleDisplayMode.setTooltip(Tooltip.create(Component.literal("""
                 Selected: only the selected tier will be displayed
                 
                 Highest: only the highest tier will be displayed
                 
                 Adaptive Highest: the highest tier will be displayed if selected does not exist""")));
 
-        positionItaTiers = ButtonWidget.builder(Text.of(ItaTiersClient.positionItaTiers.getStatus()), (buttonWidget) -> {
+        positionItaTiers = Button.builder(Component.literal(ItaTiersClient.positionItaTiers.getStatus()), (Button) -> {
             ItaTiersClient.cycleItaTiersPosition();
-            buttonWidget.setMessage(Text.of(ItaTiersClient.positionItaTiers.getStatus()));
-        }).dimensions(width / 2 - 88 - 2, distance + 75, 28, 20).build();
+            Button.setMessage(Component.literal(ItaTiersClient.positionItaTiers.getStatus()));
+        }).bounds(width / 2 - 88 - 2, distance + 75, 28, 20).build();
 
-        positionItaTiers.setTooltip(Tooltip.of(Text.of("""
+        positionItaTiers.setTooltip(Tooltip.create(Component.literal("""
                 Right: Tiers will be displayed on the right of the nametag
                 
                 Left: Tiers will be displayed on the left of the nametag""")));
 
-        activeMode = ButtonWidget.builder(Icons.CYCLE, (buttonWidget) -> ItaTiersClient.cycleModes()).dimensions(width / 2 + 2, distance + 75, 44, 20).build();
-        activeMode.setTooltip(Tooltip.of(Text.of("Cycle active gamemode")));
+        activeMode = Button.builder(Icons.CYCLE, (_) -> ItaTiersClient.cycleModes()).bounds(width / 2 + 2, distance + 75, 44, 20).build();
+        activeMode.setTooltip(Tooltip.create(Component.literal("Cycle active gamemode")));
 
-        toggleFlag = ButtonWidget.builder(ItaTiersClient.showFlag ? Icons.IT_FLAG_BUTTON: Icons.NO_IT_FLAG_BUTTON, (buttonWidget) -> {
+        toggleFlag = Button.builder(ItaTiersClient.showFlag ? Icons.IT_FLAG_BUTTON: Icons.NO_IT_FLAG_BUTTON, (Button) -> {
             ItaTiersClient.toggleFlag();
             cycleFlagPosition.active = ItaTiersClient.showFlag;
-            buttonWidget.setMessage(ItaTiersClient.showFlag ? Icons.IT_FLAG_BUTTON: Icons.NO_IT_FLAG_BUTTON);
-            toggleFlag.setTooltip(Tooltip.of(Text.of(ItaTiersClient.showFlag ? "Disable the flag in the nametag" : "Enable the flag in the nametag")));
-        }).dimensions(width / 2 - 88 - 2 + 28 + 2, distance + 75, 28, 20).build();
+            Button.setMessage(ItaTiersClient.showFlag ? Icons.IT_FLAG_BUTTON: Icons.NO_IT_FLAG_BUTTON);
+            toggleFlag.setTooltip(Tooltip.create(Component.literal(ItaTiersClient.showFlag ? "Disable the flag in the nametag" : "Enable the flag in the nametag")));
+        }).bounds(width / 2 - 88 - 2 + 28 + 2, distance + 75, 28, 20).build();
 
-        cycleFlagPosition = ButtonWidget.builder(Icons.CYCLE, (buttonWidget) -> {
+        cycleFlagPosition = Button.builder(Icons.CYCLE, (_) -> {
             ItaTiersClient.cycleFlagPosition();
-            cycleFlagPosition.setTooltip(Tooltip.of(Text.of("Cycle flag position in the nametag")));
-        }).dimensions(width / 2 - 88 - 2 + 28 + 2 + 28 + 2, distance + 75, 28, 20).build();
+            cycleFlagPosition.setTooltip(Tooltip.create(Component.literal("Cycle flag position in the nametag")));
+        }).bounds(width / 2 - 88 - 2 + 28 + 2 + 28 + 2, distance + 75, 28, 20).build();
 
         cycleFlagPosition.active = ItaTiersClient.showFlag;
 
         if (ownProfile.status == Status.READY) {
-            enableOwnProfile = ButtonWidget.builder(Text.literal(useOwnProfile ? "Preview default" : "Preview " + ownProfile.name).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (buttonWidget) -> {
+            enableOwnProfile = Button.builder(Component.literal(useOwnProfile ? "Preview default" : "Preview " + ownProfile.name).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (Button) -> {
                 useOwnProfile = !useOwnProfile;
 
                 loadPlayerAvatar();
 
-                buttonWidget.setMessage(Text.literal(useOwnProfile ? "Preview default" : "Preview " + ownProfile.name).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
-                enableOwnProfile.setTooltip(Tooltip.of(Text.of(useOwnProfile ? "Preview the default profile (" + defaultProfile.name + ")" : "Preview your player profile (" + ownProfile.name + ")")));
-            }).dimensions(width / 2 - 90, distance + 100, 180, 20).build();
-            enableOwnProfile.setTooltip(Tooltip.of(Text.of(useOwnProfile ? "Preview the default profile (" + defaultProfile.name + ")" : "Preview your player profile (" + ownProfile.name + ")")));
+                Button.setMessage(Component.literal(useOwnProfile ? "Preview default" : "Preview " + ownProfile.name).setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))));
+                enableOwnProfile.setTooltip(Tooltip.create(Component.literal(useOwnProfile ? "Preview the default profile (" + defaultProfile.name + ")" : "Preview your player profile (" + ownProfile.name + ")")));
+            }).bounds(width / 2 - 90, distance + 100, 180, 20).build();
+            enableOwnProfile.setTooltip(Tooltip.create(Component.literal(useOwnProfile ? "Preview the default profile (" + defaultProfile.name + ")" : "Preview your player profile (" + ownProfile.name + ")")));
         } else {
-            enableOwnProfile = ButtonWidget.builder(Text.literal("Cannot switch profiles").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (buttonWidget) -> {
-            }).dimensions(width / 2 - 90, distance + 100, 180, 20).build();
-            enableOwnProfile.setTooltip(Tooltip.of(Text.of("Can't switch profiles: " + ownProfile.name + " is not found or fetched yet")));
+            enableOwnProfile = Button.builder(Component.literal("Cannot switch profiles").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (_) -> {
+            }).bounds(width / 2 - 90, distance + 100, 180, 20).build();
+            enableOwnProfile.setTooltip(Tooltip.create(Component.literal("Can't switch profiles: " + ownProfile.name + " is not found or fetched yet")));
         }
 
-        clearPlayerCache = ButtonWidget.builder(Text.literal("Clear cache").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (buttonWidget) -> ItaTiersClient.clearCache(false)).dimensions(width - 88 - 10, height - 20 - 10, 88, 20).build();
-        clearPlayerCache.setTooltip(Tooltip.of(Text.of("Clear all player cache")));
+        clearPlayerCache = Button.builder(Component.literal("Clear cache").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text"))), (_) -> ItaTiersClient.clearCache(false)).bounds(width - 88 - 10, height - 20 - 10, 88, 20).build();
+        clearPlayerCache.setTooltip(Tooltip.create(Component.literal("Clear all player cache")));
 
-        this.addDrawableChild(toggleModWidget);
-        this.addDrawableChild(toggleShowIcons);
-        this.addDrawableChild(toggleSeparatorMode);
-        this.addDrawableChild(cycleDisplayMode);
-        this.addDrawableChild(positionItaTiers);
-        this.addDrawableChild(toggleFlag);
-        this.addDrawableChild(cycleFlagPosition);
-        this.addDrawableChild(activeMode);
-        this.addDrawableChild(enableOwnProfile);
-        this.addDrawableChild(clearPlayerCache);
+        addRenderableWidget(toggleModWidget);
+        addRenderableWidget(toggleShowIcons);
+        addRenderableWidget(toggleSeparatorMode);
+        addRenderableWidget(cycleDisplayMode);
+        addRenderableWidget(positionItaTiers);
+        addRenderableWidget(toggleFlag);
+        addRenderableWidget(cycleFlagPosition);
+        addRenderableWidget(activeMode);
+        addRenderableWidget(enableOwnProfile);
+        addRenderableWidget(clearPlayerCache);
     }
 
-    private void drawPlayerAvatar(DrawContext context, int x, int y) {
+    private void drawPlayerAvatar(GuiGraphicsExtractor context, int x, int y) {
         if (playerAvatarTexture != null && imageReady)
-            context.drawTexture(RenderPipelines.GUI_TEXTURED, playerAvatarTexture, x - width / 32, y, 0, 0, width / 16, (int) (width / 6.666), width / 16, (int) (width / 6.666));
+            context.blit(RenderPipelines.GUI_TEXTURED, playerAvatarTexture, x - width / 32, y, 0, 0, width / 16, (int) (width / 6.666), width / 16, (int) (width / 6.666));
         else if (ownProfile.numberOfImageRequests > 4)
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(ownProfile.name + "'s skin failed to load. Clear cache and retry"), x, y + 40, ColorControl.getColorMinecraftStandard("red"));
+            context.centeredText(font, Component.literal(ownProfile.name + "'s skin failed to load. Clear cache and retry"), x, y + 40, ColorControl.getColorMinecraftStandard("red"));
         else
             loadPlayerAvatar();
     }
@@ -187,8 +188,8 @@ public class ConfigScreen extends Screen {
             return;
 
         try (FileInputStream stream = new FileInputStream(avatarFile)) {
-            playerAvatarTexture = Identifier.of("itatiers", (useOwnProfile ? ownProfile.uuid : defaultProfile.uuid));
-            MinecraftClient.getInstance().getTextureManager().registerTexture(playerAvatarTexture, new NativeImageBackedTexture(null, NativeImage.read(stream)));
+            playerAvatarTexture = Identifier.fromNamespaceAndPath("itatiers", (useOwnProfile ? ownProfile.uuid : defaultProfile.uuid));
+            Minecraft.getInstance().getTextureManager().register(playerAvatarTexture, new DynamicTexture(String::new, NativeImage.read(stream)));
             imageReady = true;
         } catch (IOException ignored) {
         }

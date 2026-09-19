@@ -7,9 +7,9 @@ import com.google.gson.JsonParser;
 import com.itatiers.ItaTiersClient;
 import com.itatiers.profile.types.ItaTiersProfile;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -41,7 +41,7 @@ public class PlayerProfile {
 
     public ItaTiersProfile profileItaTiers;
 
-    public Text originalNameText;
+    public Component originalNameText;
     public String originalName;
     public boolean imageSaved = false;
     public int numberOfImageRequests = 0;
@@ -50,7 +50,7 @@ public class PlayerProfile {
     public PlayerProfile(String name, boolean regular) {
         this.regular = regular;
         this.name = name;
-        originalNameText = Text.of(name);
+        originalNameText = Component.literal(name);
         originalName = name;
     }
 
@@ -61,22 +61,20 @@ public class PlayerProfile {
         if (jsonObject.has("name") && jsonObject.has("id")) {
             this.name = jsonObject.get("name").getAsString();
             uuid = jsonObject.get("id").getAsString();
-            originalNameText = Text.of(name);
+            originalNameText = Component.literal(name);
         } else {
             status = Status.NOT_EXISTING;
             return;
         }
 
-        final Identifier DEFAULT_IMAGE = Identifier.of("minecraft", "textures/ita_default.png");
+        final Identifier DEFAULT_IMAGE = Identifier.fromNamespaceAndPath("minecraft", "textures/ita_default.png");
         Path targetFile = FabricLoader.getInstance().getGameDir().resolve("cache/itatiers/da300ba3690b43228feacf1628825c88.png");
 
-        try (InputStream inputStream = MinecraftClient.getInstance().getResourceManager().getResource(DEFAULT_IMAGE).orElseThrow().getInputStream()) {
-            if (inputStream == null) throw new IOException();
-
+        try (InputStream inputStream = Minecraft.getInstance().getResourceManager().getResource(DEFAULT_IMAGE).orElseThrow().open()) {
             Files.createDirectories(targetFile.getParent());
             Files.copy(inputStream, targetFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ignored) {
-            LOGGER.warn("Error copying default image");
+            LOGGER.warn("Error copying default skin");
         }
 
         profileItaTiers = new ItaTiersProfile(jsonItaTiers);
@@ -120,7 +118,7 @@ public class PlayerProfile {
                             for (PlayerProfile playerProfile : playerProfiles)
                                 playerProfile.status = Status.API_ISSUE;
                     })
-                    .exceptionally(exception -> {
+                    .exceptionally(_ -> {
                         for (PlayerProfile playerProfile : playerProfiles)
                             playerProfile.status = Status.API_ISSUE;
 

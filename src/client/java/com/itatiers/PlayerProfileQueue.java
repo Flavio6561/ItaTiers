@@ -8,7 +8,11 @@ import java.util.concurrent.*;
 
 public class PlayerProfileQueue {
     private static final ConcurrentLinkedDeque<PlayerProfile> queue = new ConcurrentLinkedDeque<>();
-    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "itatiers-profile-queue");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     static {
         scheduler.scheduleAtFixedRate(PlayerProfileQueue::processQueue, 0, 8500, TimeUnit.MILLISECONDS);

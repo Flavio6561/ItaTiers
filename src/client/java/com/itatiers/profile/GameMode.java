@@ -3,17 +3,17 @@ package com.itatiers.profile;
 import com.google.gson.JsonElement;
 import com.itatiers.misc.Modes;
 import com.itatiers.textures.ColorControl;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 
 public class GameMode {
     public Status status = Status.SEARCHING;
 
     private String tier;
 
-    public Text displayedTier;
+    public Component displayedTier;
     private String displayedTierUnformatted;
-    public Text tierTooltip;
+    public Component tierTooltip;
 
     public final Modes name;
     public final String parsingName;
@@ -28,13 +28,13 @@ public class GameMode {
         displayedTierUnformatted = jsonElement.getAsString();
         tier = String.valueOf(displayedTierUnformatted.toCharArray()[2]);
 
-        displayedTier = Text.literal(displayedTierUnformatted).setStyle(Style.EMPTY.withColor(getTierColor(displayedTierUnformatted)));
+        displayedTier = Component.literal(displayedTierUnformatted).setStyle(Style.EMPTY.withColor(getTierColor(displayedTierUnformatted)));
         tierTooltip = getTierTooltip();
 
         status = Status.READY;
     }
 
-    private Text getTierTooltip() {
+    private Component getTierTooltip() {
         String tierTooltipString = "";
         if (displayedTierUnformatted.contains("R"))
             tierTooltipString += "Retired ";
@@ -45,7 +45,7 @@ public class GameMode {
 
         tierTooltipString += "Tier " + tier + "\n\nPoints: " + getTierPoints();
 
-        return Text.literal(tierTooltipString).setStyle(Style.EMPTY.withColor(getTierColor(displayedTierUnformatted)));
+        return Component.literal(tierTooltipString).setStyle(Style.EMPTY.withColor(getTierColor(displayedTierUnformatted)));
     }
 
     public int getTierPoints() {

@@ -7,6 +7,7 @@
   "authors": [
     "Flavio6561"
   ],
+  "license": "GPL-3.0",
   "contact": {
     "issues": "https://github.com/Flavio6561/ItaTiers/issues",
     "homepage": "https://github.com/Flavio6561/ItaTiers"
@@ -38,12 +39,8 @@
   ],
   "depends": {
     "fabricloader": ">=0.16.14",
-    "minecraft": [
-      "1.21.9",
-      "1.21.10",
-      "1.21.11"
-    ],
-    "java": ">=21",
+    "minecraft": ["26.3"],
+    "java": ">=25",
     "fabric-api": "*"
   }
 }

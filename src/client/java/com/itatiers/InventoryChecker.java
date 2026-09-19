@@ -3,21 +3,23 @@ package com.itatiers;
 import com.itatiers.misc.ConfigManager;
 import com.itatiers.misc.Modes;
 import com.itatiers.textures.ColorControl;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.*;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.Set;
 
 public class InventoryChecker {
-    public static void checkInventory(MinecraftClient client) {
+    public static void checkInventory(Minecraft client) {
         if (client.player == null) return;
 
         Modes detected = null;
 
-        PlayerInventory inventory = client.player.getInventory();
+        Inventory inventory = client.player.getInventory();
 
         if (checkVanilla(inventory)) {
             ItaTiersClient.activeItaTiersMode = Modes.VANILLA;
@@ -55,14 +57,14 @@ public class InventoryChecker {
         }
 
         if (detected != null)
-            client.player.sendMessage(Text.literal("").append(detected.label).append(Text.literal(" was detected").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text")))), true);
+            client.player.sendOverlayMessage(Component.literal("").append(detected.label).append(Component.literal(" was detected").setStyle(Style.EMPTY.withColor(ColorControl.getColor("text")))));
         else
-            client.player.sendMessage(Text.literal("No gamemode detected").setStyle(Style.EMPTY.withColor(ColorControl.getColor("red"))), true);
+            client.player.sendOverlayMessage(Component.literal("No gamemode detected").setStyle(Style.EMPTY.withColor(ColorControl.getColor("red"))));
 
         ConfigManager.saveConfig();
     }
 
-    private static boolean checkVanilla(PlayerInventory inventory) {
+    private static boolean checkVanilla(Inventory inventory) {
         boolean hasObsidian = false;
         boolean hasCrystal = false;
         boolean hasAnchor = false;
@@ -73,8 +75,8 @@ public class InventoryChecker {
         boolean hasLeggings = false;
         boolean hasBoots = false;
 
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
 
             hasObsidian |= hasItem(stack, Items.OBSIDIAN);
             hasCrystal |= hasItem(stack, Items.END_CRYSTAL);
@@ -90,15 +92,15 @@ public class InventoryChecker {
         return hasObsidian && hasCrystal && hasAnchor && hasGlowstone && hasSword && hasHelmet && hasChestplate && hasLeggings && hasBoots;
     }
 
-    private static boolean checkSword(PlayerInventory inventory) {
+    private static boolean checkSword(Inventory inventory) {
         boolean hasSword = false;
         boolean hasHelmet = false;
         boolean hasChestplate = false;
         boolean hasLeggings = false;
         boolean hasBoots = false;
 
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
 
             hasSword |= hasItem(stack, Items.DIAMOND_SWORD);
             hasHelmet |= hasItem(stack, Items.DIAMOND_HELMET);
@@ -112,7 +114,7 @@ public class InventoryChecker {
         return hasSword && hasHelmet && hasChestplate && hasLeggings && hasBoots;
     }
 
-    private static boolean checkUhc(PlayerInventory inventory) {
+    private static boolean checkUhc(Inventory inventory) {
         boolean hasShield = false;
         boolean hasGaps = false;
         boolean hasLava = false;
@@ -127,8 +129,8 @@ public class InventoryChecker {
         boolean hasEnchantedLeggings = false;
         boolean hasEnchantedBoots = false;
 
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
 
             hasShield |= hasItem(stack, Items.SHIELD);
             hasGaps |= hasItem(stack, Items.GOLDEN_APPLE);
@@ -151,7 +153,7 @@ public class InventoryChecker {
                 hasEnchantedAxe && hasEnchantedHelmet && hasEnchantedChestplate && hasEnchantedLeggings && hasEnchantedBoots;
     }
 
-    private static boolean checkPot(PlayerInventory inventory) {
+    private static boolean checkPot(Inventory inventory) {
         boolean hasSteak = false;
         boolean hasPotions = false;
         boolean hasEnchantedSword = false;
@@ -160,8 +162,8 @@ public class InventoryChecker {
         boolean hasEnchantedLeggings = false;
         boolean hasEnchantedBoots = false;
 
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
 
             hasSteak |= hasItem(stack, Items.COOKED_BEEF);
             hasPotions |= hasItem(stack, Items.SPLASH_POTION);
@@ -177,7 +179,7 @@ public class InventoryChecker {
         return hasSteak && hasPotions && hasEnchantedSword && hasEnchantedHelmet && hasEnchantedChestplate && hasEnchantedLeggings && hasEnchantedBoots;
     }
 
-    private static boolean checkNethPot(PlayerInventory inventory) {
+    private static boolean checkNethPot(Inventory inventory) {
         boolean hasGaps = false;
         boolean hasPotions = false;
         boolean hasTotem = false;
@@ -188,8 +190,8 @@ public class InventoryChecker {
         boolean hasEnchantedLeggings = false;
         boolean hasEnchantedBoots = false;
 
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
 
             hasGaps |= hasItem(stack, Items.GOLDEN_APPLE);
             hasPotions |= hasItem(stack, Items.SPLASH_POTION);
@@ -208,7 +210,7 @@ public class InventoryChecker {
                 hasEnchantedChestplate && hasEnchantedLeggings && hasEnchantedBoots;
     }
 
-    private static boolean checkSmp(PlayerInventory inventory) {
+    private static boolean checkSmp(Inventory inventory) {
         boolean hasGaps = false;
         boolean hasPotions = false;
         boolean hasTotem = false;
@@ -222,8 +224,8 @@ public class InventoryChecker {
         boolean hasEnchantedLeggings = false;
         boolean hasEnchantedBoots = false;
 
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
 
             hasGaps |= hasItem(stack, Items.GOLDEN_APPLE);
             hasPotions |= hasItem(stack, Items.SPLASH_POTION);
@@ -245,7 +247,7 @@ public class InventoryChecker {
                 hasEnchantedSword && hasEnchantedHelmet && hasEnchantedChestplate && hasEnchantedLeggings && hasEnchantedBoots;
     }
 
-    private static boolean checkAxe(PlayerInventory inventory) {
+    private static boolean checkAxe(Inventory inventory) {
         boolean hasBow = false;
         boolean hasCrossbow = false;
         boolean hasShield = false;
@@ -256,8 +258,8 @@ public class InventoryChecker {
         boolean hasLeggings = false;
         boolean hasBoots = false;
 
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
 
             hasBow |= hasItem(stack, Items.BOW, false);
             hasCrossbow |= hasItem(stack, Items.CROSSBOW, false);
@@ -276,7 +278,7 @@ public class InventoryChecker {
     }
 
     private static boolean hasItem(ItemStack itemStack, Item item, boolean needEnchant) {
-        return itemStack.getItem() == item && (needEnchant == itemStack.hasEnchantments());
+        return itemStack.getItem() == item && (needEnchant == itemStack.isEnchanted());
     }
 
     private static boolean hasItem(ItemStack itemStack, Item item) {
