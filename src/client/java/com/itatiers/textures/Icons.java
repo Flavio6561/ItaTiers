@@ -13,6 +13,7 @@ public class Icons {
     public static final Text SMP = Text.literal("\uF015").styled(style -> style.withFont(Identifier.of("minecraft", "ita_gamemodes")));
     public static final Text AXE = Text.literal("\uF016").styled(style -> style.withFont(Identifier.of("minecraft", "ita_gamemodes")));
     public static final Text ELYTRA = Text.literal("\uF017").styled(style -> style.withFont(Identifier.of("minecraft", "ita_gamemodes")));
+    public static final Text MACE = Text.literal("\uF018").styled(style -> style.withFont(Identifier.of("minecraft", "ita_gamemodes")));
 
     public static Text OVERALL = Text.literal("\uF001").setStyle(Style.EMPTY.withColor(ColorControl.getColorMinecraftStandard("points")).withFont(Identifier.of("minecraft", "ita_misc")));
     public static final Text CYCLE = Text.literal("\uF002").styled(style -> style.withFont(Identifier.of("minecraft", "ita_misc")));
@@ -29,4 +30,5 @@ public class Icons {
     public static final Text SMP_TAG = Text.literal("\uF015").styled(style -> style.withFont(Identifier.of("minecraft", "ita_gamemodes-tags")));
     public static final Text AXE_TAG = Text.literal("\uF016").styled(style -> style.withFont(Identifier.of("minecraft", "ita_gamemodes-tags")));
     public static final Text ELYTRA_TAG = Text.literal("\uF017").styled(style -> style.withFont(Identifier.of("minecraft", "ita_gamemodes-tags")));
+    public static final Text MACE_TAG = Text.literal("\uF018").styled(style -> style.withFont(Identifier.of("minecraft", "ita_gamemodes-tags")));
 }

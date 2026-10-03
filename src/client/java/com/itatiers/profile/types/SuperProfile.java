@@ -55,10 +55,14 @@ public class SuperProfile {
 
     private void parseRankings(JsonObject jsonObject) {
         for (GameMode gameMode : gameModes) {
-            if (jsonObject.has(gameMode.parsingName))
-                gameMode.parseTiers(jsonObject.get(gameMode.parsingName));
-            else
-                gameMode.status = Status.NOT_EXISTING;
+            if (jsonObject.has(gameMode.parsingName)) {
+                JsonObject tierObject = jsonObject.get(gameMode.parsingName).getAsJsonObject();
+                if (tierObject.has("tier") && tierObject.has("points") && tierObject.has("retired") && tierObject.has("peak")) {
+                    gameMode.parseTiers(tierObject.get("tier"));
+                    continue;
+                }
+            }
+            gameMode.status = Status.NOT_EXISTING;
         }
         highest = getHighestMode();
     }

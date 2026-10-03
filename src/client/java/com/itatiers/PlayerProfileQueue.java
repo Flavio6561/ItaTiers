@@ -8,10 +8,15 @@ import java.util.concurrent.*;
 
 public class PlayerProfileQueue {
     private static final ConcurrentLinkedDeque<PlayerProfile> queue = new ConcurrentLinkedDeque<>();
-    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private static final int MAX_QUEUE_SIZE = 90;
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "itatiers-profile-queue");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     static {
-        scheduler.scheduleAtFixedRate(PlayerProfileQueue::processQueue, 0, 8500, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(PlayerProfileQueue::processQueue, 0, 7000, TimeUnit.MILLISECONDS);
     }
 
     public static void enqueue(PlayerProfile profile) {
@@ -20,6 +25,18 @@ public class PlayerProfileQueue {
 
     private static void processQueue() {
         ArrayList<PlayerProfile> toProcess = new ArrayList<>();
+        ConcurrentLinkedDeque<PlayerProfile> playerQueue = new ConcurrentLinkedDeque<>(queue);
+        ConcurrentLinkedDeque<PlayerProfile> exceedingQueue = new ConcurrentLinkedDeque<>();
+        if (queue.size() > MAX_QUEUE_SIZE) {
+            int counter = 0;
+            for (PlayerProfile playerProfile : playerQueue) {
+                counter++;
+                if (counter > MAX_QUEUE_SIZE) {
+                    exceedingQueue.add(playerProfile);
+                    queue.remove(playerProfile);
+                }
+            }
+        }
         for (PlayerProfile playerProfile : queue) {
             if (playerProfile != null && playerProfile.status == Status.SEARCHING) {
                 if (!playerProfile.name.matches("^[a-zA-Z0-9_]{3,16}$") || playerProfile.name.contains(".")) {
@@ -31,6 +48,7 @@ public class PlayerProfileQueue {
             }
         }
         queue.clear();
+        queue.addAll(exceedingQueue);
         PlayerProfile.buildItaTiersRequests(toProcess);
     }
 
