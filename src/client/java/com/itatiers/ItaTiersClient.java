@@ -259,18 +259,64 @@ public class ItaTiersClient implements ClientModInitializer {
                       "uuid": "da300ba3690b43228feacf1628825c88",
                       "username": "Sbiguss",
                       "retired": true,
+                      "points": 225,
+                      "rank": 1,
                       "tiers": {
-                        "axe": "HT2",
-                        "diapot": "HT1",
-                        "elytra": "HT3",
-                        "nethpot": "LT2",
-                        "smp": "LT1",
-                        "sword": "HT2",
-                        "uhc": "HT2",
-                        "vanilla": "LT4"
-                      },
-                      "points": 217,
-                      "rank": 1
+                            "sword": {
+                              "tier": "HT2",
+                              "points": 28,
+                              "retired": false,
+                              "peak": "HT2"
+                          },
+                          "vanilla": {
+                              "tier": "LT4",
+                              "points": 3,
+                              "retired": false,
+                              "peak": "LT4"
+                          },
+                            "uhc": {
+                              "tier": "HT2",
+                              "points": 28,
+                              "retired": true,
+                              "peak": "HT2"
+                          },
+                          "axe": {
+                              "tier": "HT2",
+                              "points": 28,
+                              "retired": false,
+                              "peak": "HT2"
+                          },
+                          "diapot": {
+                              "tier": "HT1",
+                              "points": 60,
+                              "retired": false,
+                              "peak": "HT1"
+                          },
+                          "nethpot": {
+                              "tier": "LT2",
+                              "points": 16,
+                              "retired": false,
+                              "peak": "LT2"
+                          },
+                          "smp": {
+                              "tier": "LT1",
+                              "points": 44,
+                              "retired": true,
+                              "peak": "LT1"
+                          },
+                          "elytra": {
+                              "tier": "LT2",
+                              "points": 16,
+                              "retired": false,
+                              "peak": "LT2"
+                          },
+                          "mace": {
+                              "tier": "HT5",
+                              "points": 2,
+                              "retired": false,
+                              "peak": "HT5"
+                          }
+                      }
                     }""");
         }
 
@@ -385,6 +431,12 @@ public class ItaTiersClient implements ClientModInitializer {
         } catch (IOException e) {
             LOGGER.warn("Error deleting cache folder: {}", e.getMessage());
         }
+
+        MinecraftClient minecraft = MinecraftClient.getInstance();
+        minecraft.execute(() -> {
+            if (toggleMod && minecraft.world != null)
+                minecraft.world.getPlayers().forEach(playerEntity -> addGetPlayer(playerEntity.getNameForScoreboard(), false));
+        });
     }
 
     public static void toggleFlag() {
