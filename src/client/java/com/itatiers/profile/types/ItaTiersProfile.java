@@ -18,5 +18,6 @@ public class ItaTiersProfile extends SuperProfile {
         gameModes.add(new GameMode(Modes.ELYTRA, "elytra"));
         gameModes.add(new GameMode(Modes.POT, "diapot"));
         gameModes.add(new GameMode(Modes.AXE, "axe"));
+        gameModes.add(new GameMode(Modes.MACE, "mace"));
     }
 }

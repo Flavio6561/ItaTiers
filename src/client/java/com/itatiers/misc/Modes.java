@@ -16,7 +16,8 @@ public enum Modes {
     NETH_POT(Icons.NETH_POT, Icons.NETH_POT_TAG, "nethpot", "Netherite Pot"),
     ELYTRA(Icons.ELYTRA, Icons.ELYTRA_TAG, "elytra", "Elytra"),
     POT(Icons.POT, Icons.POT_TAG, "diapot", "Diamond Pot"),
-    AXE(Icons.AXE, Icons.AXE_TAG, "axe", "Axe");
+    AXE(Icons.AXE, Icons.AXE_TAG, "axe", "Axe"),
+    MACE(Icons.MACE, Icons.MACE_TAG, "mace", "Mace");
 
     public final Component icon;
     public final Component iconTag;
