@@ -71,6 +71,15 @@
       "chars": [
         "\uF017"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "font/gamemodes/mace.png",
+      "height": 12,
+      "ascent": 12,
+      "chars": [
+        "\uF018"
+      ]
     }
   ]
 }

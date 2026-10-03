@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.itatiers.ItaTiersClient;
+import com.itatiers.PlayerProfileQueue;
 import com.itatiers.profile.types.ItaTiersProfile;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
@@ -93,12 +94,12 @@ public class PlayerProfile {
             if (profile.name != null)
                 namesArray.add(profile.name);
 
-        jsonBodyObject.add("names", namesArray);
+        jsonBodyObject.add("players", namesArray);
         String jsonBody = jsonBodyObject.toString();
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.mctiers.it/api/mod/v1/profiles"))
+                    .uri(URI.create("https://www.mctiers.it/api/v1/players/lookup"))
                     .header("User-Agent", "ItaTiers/" + version)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
@@ -107,6 +108,12 @@ public class PlayerProfile {
             ItaTiersClient.HTTP_CLIENT
                     .sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenAccept(response -> {
+                        if (response.statusCode() == 429) {
+                            for (PlayerProfile playerProfile : playerProfiles)
+                                PlayerProfileQueue.enqueue(playerProfile);
+                            return;
+                        }
+
                         if (response.statusCode() != 200) {
                             for (PlayerProfile playerProfile : playerProfiles)
                                 playerProfile.status = Status.API_ISSUE;
@@ -134,8 +141,8 @@ public class PlayerProfile {
         JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
         ArrayList<PlayerProfile> notFound = new ArrayList<>(playerProfiles);
 
-        if (jsonObject.has("profiles") && jsonObject.has("version")) {
-            JsonArray profiles = jsonObject.getAsJsonArray("profiles");
+        if (jsonObject.has("players") && jsonObject.has("version")) {
+            JsonArray profiles = jsonObject.getAsJsonArray("players");
 
             for (JsonElement profileElement : profiles) {
                 JsonObject profileObj = profileElement.getAsJsonObject();

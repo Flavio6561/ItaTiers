@@ -18,6 +18,7 @@ public class Icons {
     public static final Component SMP = Component.literal("\uF015").setStyle(itaGamemodesStyle);
     public static final Component AXE = Component.literal("\uF016").setStyle(itaGamemodesStyle);
     public static final Component ELYTRA = Component.literal("\uF017").setStyle(itaGamemodesStyle);
+    public static final Component MACE = Component.literal("\uF018").setStyle(itaGamemodesStyle);
 
     public static Component OVERALL = Component.literal("\uF001").setStyle(Style.EMPTY.withColor(ColorControl.getColorMinecraftStandard("points")).withFont(new FontDescription.Resource(Identifier.fromNamespaceAndPath("minecraft", "ita_misc"))));
     public static final Component CYCLE = Component.literal("\uF002").setStyle(itaMiscStyle);
@@ -34,4 +35,5 @@ public class Icons {
     public static final Component SMP_TAG = Component.literal("\uF015").setStyle(itaGamemodesTagsStyle);
     public static final Component AXE_TAG = Component.literal("\uF016").setStyle(itaGamemodesTagsStyle);
     public static final Component ELYTRA_TAG = Component.literal("\uF017").setStyle(itaGamemodesTagsStyle);
+    public static final Component MACE_TAG = Component.literal("\uF018").setStyle(itaGamemodesTagsStyle);
 }
